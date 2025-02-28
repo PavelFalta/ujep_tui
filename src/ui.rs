@@ -357,14 +357,14 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(search_paragraph, main_chunks[2]);
 
                 // Add label in top right of the tray
-                let label_text = "\"day: po\"";
+                let label_text = "\"day:po\"";
                 let label_area = Rect {
                     x: main_chunks[2].x + main_chunks[2].width.saturating_sub(label_text.len() as u16 + 2),
                     y: main_chunks[2].y,
                     width: label_text.len() as u16 + 2,
                     height: 3,
                 };
-                let label_block = Block::default().borders(Borders::ALL).title("Hint");
+                let label_block = Block::default().borders(Borders::ALL).title("Hint - Filtering");
                 let label_paragraph = Paragraph::new(label_text)
                     .block(label_block)
                     .alignment(Alignment::Center);
