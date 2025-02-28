@@ -303,6 +303,12 @@ r#"[Up/Down]: Move selection
                     }
                     continue;
                 }
+                if app.show_details {
+                    if key.code == KeyCode::Enter {
+                        app.show_details = false;
+                    }
+                    continue;
+                }
 
                 // Main search mode handling.
                 if app.search_mode {
@@ -375,6 +381,9 @@ r#"[Up/Down]: Move selection
                 // Normal key handling.
                 match key.code {
                     KeyCode::Char('q') => break,
+                    KeyCode::Enter => {
+                        app.show_details = true;
+                    }
                     KeyCode::Char('h') => {
                         app.show_help = true;
                     }

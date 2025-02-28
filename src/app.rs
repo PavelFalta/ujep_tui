@@ -13,6 +13,7 @@ pub struct App<'a> {
     pub show_help: bool,
     // New fields for ignore functionality:
     /// Set of course IDs to ignore.
+    pub show_details: bool,
     pub ignored_ids: HashSet<u32>,
     /// Whether the ignore overlay is active.
     pub ignore_overlay_active: bool,
@@ -54,6 +55,7 @@ impl<'a> App<'a> {
             last_selected: None,
             scroll_offset: 0,
             show_help: false,
+            show_details: false,
             ignored_ids: ignored_ids.unwrap_or_default(),
             ignore_overlay_active: false,
             ignore_overlay_index: 0,
