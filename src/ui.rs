@@ -490,7 +490,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             
             if app.show_help {
-                let overlay_area = center_rect(50, 35, size);
+                let overlay_area = center_rect(50, 25, size);
                 f.render_widget(Clear, overlay_area);
                 let bg_block = Block::default().style(Style::default().bg(Color::Black));
                 f.render_widget(bg_block, overlay_area);
@@ -514,6 +514,18 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     )
                     .alignment(Alignment::Center);
                 f.render_widget(overlay, overlay_area);
+
+                let additional_text = "Press [Esc] to exit help";
+                let additional_area = Rect {
+                    x: overlay_area.x + overlay_area.width.saturating_sub(additional_text.len() as u16 + 2),
+                    y: overlay_area.y + overlay_area.height.saturating_sub(3),
+                    width: additional_text.len() as u16 + 2,
+                    height: 3,
+                };
+                let additional_paragraph = Paragraph::new(additional_text)
+                    .block(Block::default().borders(Borders::ALL))
+                    .alignment(Alignment::Center);
+                f.render_widget(additional_paragraph, additional_area);
             }
         })?;
 
