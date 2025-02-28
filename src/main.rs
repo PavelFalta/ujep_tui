@@ -1,0 +1,106 @@
+mod timetable;
+mod app;
+mod ui;
+
+use std::env;
+use std::fs;
+use std::io::{self, Write};
+use std::collections::HashSet;
+use crossterm::{
+    execute,
+    terminal::{enable_raw_mode, disable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
+use serde::{Deserialize, Serialize};
+use dirs::cache_dir;
+
+use crate::timetable::Timetable;
+use crate::app::App;
+use crate::ui::run_app;
+
+#[derive(Serialize, Deserialize)]
+struct IgnoredIds {
+    ids: HashSet<u32>,
+}
+
+fn load_ignored_ids() -> HashSet<u32> {
+    if let Some(mut path) = cache_dir() {
+        path.push("ujep_timetable");
+        path.push("ignored_ids.json");
+        if let Ok(data) = fs::read_to_string(&path) {
+            if let Ok(ignored_ids) = serde_json::from_str::<IgnoredIds>(&data) {
+                return ignored_ids.ids;
+            }
+        }
+    }
+    HashSet::new()
+}
+
+fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
+    if let Some(mut path) = cache_dir() {
+        path.push("ujep_timetable");
+        fs::create_dir_all(&path).unwrap();
+        path.push("ignored_ids.json");
+        let ignored_ids = IgnoredIds {
+            ids: ignored_ids.clone(),
+        };
+        if let Ok(data) = serde_json::to_string(&ignored_ids) {
+            let _ = fs::write(path, data);
+        }
+    }
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Expect one command-line argument: the path to the timetable JSON file.
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Usage: {} <path_to_timetable.json>", args[0]);
+        std::process::exit(1);
+    }
+    let file_path = &args[1];
+
+    // Read and parse the JSON file.
+    let json_data = fs::read_to_string(file_path)?;
+    let timetable: Timetable = serde_json::from_str(&json_data)?;
+
+    let mut courses: Vec<_> = timetable.data.courseActions
+        .iter()
+        .filter(|c| c.date.is_some())  // Keep only courses with a date
+        .collect();
+
+    // Load ignored IDs from cache.
+    let ignored_ids = load_ignored_ids();
+
+    // Create our app and sort courses by start time.
+    let mut app = App::new(courses, Some(ignored_ids));
+    app.sort_courses_by_start();
+
+    // Scroll so that the upcoming course is near the top.
+    if let Some(idx) = app.upcoming_index() {
+        app.scroll_offset = idx;
+    }
+
+    // Set up terminal.
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // Run the TUI.
+    let res = run_app(&mut terminal, &mut app);
+
+    // Restore terminal.
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    terminal.show_cursor()?;
+
+    // Save ignored IDs to cache.
+    save_ignored_ids(&app.ignored_ids);
+
+    if let Err(err) = res {
+        eprintln!("Error: {}", err);
+    }
+    Ok(())
+}
