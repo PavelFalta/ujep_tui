@@ -337,6 +337,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             
                 // -- Build ASCII art representation of the time_str --
                 // We define a helper function that returns 5 lines of ASCII for each character.
+                // We'll then *repeat* each line twice to create a "bigger" 10-line high character.
                 fn ascii_digit(ch: char) -> [&'static str; 5] {
                     match ch {
                         '0' => [
@@ -347,11 +348,11 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             " \\__/ ",
                         ],
                         '1' => [
-                            "      ",
-                            "   /| ",
-                            "    | ",
-                            "    | ",
-                            "    | ",
+                            "   ",
+                            " /| ",
+                            "  | ",
+                            "  | ",
+                            "  | ",
                         ],
                         '2' => [
                             "  __  ",
@@ -426,21 +427,41 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     }
                 }
             
-                // Convert the current time string into multi-line ASCII art.
-                let mut ascii_lines = vec![String::new(); 5];
+                // We'll build the "taller" ASCII clock by repeating each original line twice.
+                // First, we create a vector of *10* lines for each character, since each of the
+                // 5 lines is duplicated. Then we build them side by side for the entire string.
+                //
+                // Example:
+                // Original 5 lines become 10 lines:
+                // line1 -> line1
+                // line1 -> line1
+                // line2 -> line2
+                // line2 -> line2
+                // etc.
+                
+                // We will accumulate the final ASCII clock in a vector of 10 strings.
+                // Then we join them with newlines at the end.
+                let mut ascii_lines = vec![String::new(); 10];
+            
                 for c in time_str.chars() {
                     let digit_art = ascii_digit(c);
-                    for (i, art_line) in digit_art.iter().enumerate() {
-                        ascii_lines[i].push_str(art_line);
-                        // Add a small space between characters to keep them separated.
-                        ascii_lines[i].push(' ');
+                    // For each of the 5 original lines, append them twice to the 10-line output.
+                    for (i, &art_line) in digit_art.iter().enumerate() {
+                        let double_index = i * 2;
+                        // Append to line[i*2] and line[i*2+1]
+                        ascii_lines[double_index].push_str(art_line);
+                        ascii_lines[double_index].push(' ');       // small space after
+                        ascii_lines[double_index + 1].push_str(art_line);
+                        ascii_lines[double_index + 1].push(' ');
                     }
                 }
-                // Join the lines with newlines to form the final ASCII art string.
+            
+                // Join these 10 lines with newline characters.
                 let ascii_time_str = ascii_lines.join("\n");
             
                 // Create a block for the clock display.
                 let time_block = Block::default().borders(Borders::ALL).title("Current Time");
+            
                 // Wrap our ASCII art in a Paragraph widget.
                 let time_paragraph = Paragraph::new(ascii_time_str)
                     .block(time_block)
@@ -448,17 +469,17 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     .style(
                         Style::default()
                             .add_modifier(Modifier::BOLD)
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::ITALIC),
+                            .fg(Color::Yellow),
                     );
             
-                // Center the ASCII clock vertically and allow enough height for 5 lines.
-                let ascii_height = 5; // We know each digit block is 5 lines tall
+                // We now have 10 lines of ASCII clock text + 2 lines of border.
+                // Let's center it vertically.
+                let ascii_height = 10;
                 let centered_area = Rect {
                     x: 0,
-                    y: size.height / 2 - (ascii_height as u16 / 2),
+                    y: size.height.saturating_sub(ascii_height as u16 + 2) / 2,
                     width: size.width,
-                    height: ascii_height as u16 + 2, // Some extra space for the borders
+                    height: ascii_height as u16 + 2, // extra space for borders
                 };
             
                 // Finally, render the ASCII clock.
