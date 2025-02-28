@@ -24,8 +24,28 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
         // 2) Apply main search filter if we have a non-empty query.
         if let Some(ref query) = app.search_query {
             if !query.is_empty() {
-                let q = query.to_lowercase();
-                displayed.retain(|course| course.name.to_lowercase().contains(&q));
+            let q = query.to_lowercase();
+            displayed.retain(|course| {
+                course.name.to_lowercase().contains(&q) ||
+                course.dept.to_lowercase().contains(&q) ||
+                course.abbr.to_lowercase().contains(&q) ||
+                course.year.to_lowercase().contains(&q) ||
+                course.semester.to_lowercase().contains(&q) ||
+                course.date.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                course.timeFrom.to_lowercase().contains(&q) ||
+                course.timeTo.to_lowercase().contains(&q) ||
+                course.place.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                course.room.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                course.class_type.to_lowercase().contains(&q) ||
+                course.day.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                course.weekType.to_lowercase().contains(&q) ||
+                course.weekFrom.to_string().contains(&q) ||
+                course.weekTo.to_string().contains(&q) ||
+                course.note.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                course.contact.to_lowercase().contains(&q) ||
+                course.statut.to_lowercase().contains(&q) ||
+                course.teachingTeacherStagId.to_string().contains(&q)
+            });
             }
         }
 
