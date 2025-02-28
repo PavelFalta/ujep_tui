@@ -64,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    display_loading_widget(&mut terminal)?;
+    display_loading_widget()?;
     
     run_login().await?;
     fetch_timetable().await?;
@@ -135,7 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if let Err(err) = res {
             if err.kind() == io::ErrorKind::Interrupted && err.to_string() == "forced refresh" {
-                display_loading_widget(&mut terminal)?;
+                display_loading_widget()?;
                 fetch_timetable().await?;
                 disable_raw_mode()?;
                 execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -151,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn display_loading_widget(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<(), Box<dyn std::error::Error>> {
+fn display_loading_widget() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
