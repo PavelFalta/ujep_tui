@@ -699,6 +699,19 @@ fn draw_ignore_overlay<B: Backend>(f: &mut ratatui::Frame<B>, area: Rect, app: &
         .block(Block::default().borders(Borders::ALL).style(Style::default().bg(Color::Black).fg(Color::White)))
         .alignment(Alignment::Left);
     f.render_widget(list_paragraph, ignore_chunks[1]);
+
+    // Render clear label in bottom right corner
+    let clear_label = "[c]lear";
+    let clear_area = Rect {
+        x: overlay_area.x + overlay_area.width.saturating_sub(clear_label.len() as u16 + 2),
+        y: overlay_area.y + overlay_area.height.saturating_sub(3),
+        width: clear_label.len() as u16 + 2,
+        height: 3,
+    };
+    let clear_paragraph = Paragraph::new(clear_label)
+        .block(Block::default().borders(Borders::ALL))
+        .alignment(Alignment::Center);
+    f.render_widget(clear_paragraph, clear_area);
 }
 
 /// Returns a rectangle centered in the given area with the specified percentages.
