@@ -668,7 +668,7 @@ fn draw_ignore_overlay<B: Backend>(f: &mut ratatui::Frame<B>, area: Rect, app: &
         .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
         .split(overlay_area);
 
-    let header = "Ignore Menu (Enter to toggle, Backspace or 'i' to close)";
+    let header = "Ignore Menu (Enter to toggle, Backspace or [i] to close)";
     let header_paragraph = Paragraph::new(header)
         .block(Block::default().borders(Borders::ALL).title("Ignore Classes"))
         .alignment(Alignment::Left);
@@ -692,7 +692,7 @@ fn draw_ignore_overlay<B: Backend>(f: &mut ratatui::Frame<B>, area: Rect, app: &
     for (i, &course) in app.unique_courses.iter().enumerate().skip(scroll).take(end - scroll) {
         let indicator = if app.ignored_ids.contains(&course.id) { "[X]" } else { "[ ]" };
         let prefix = if i == app.ignore_overlay_index { ">" } else { " " };
-        let line = format!("{} {} {}: {}", prefix, indicator, course.class_type, course.name);
+        let line = format!("{} {} {}[{}]", prefix, indicator, course.name, course.class_type);
         text_lines.push(line);
     }
     let list_paragraph = Paragraph::new(text_lines.join("\n"))
