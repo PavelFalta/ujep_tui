@@ -319,6 +319,25 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 .alignment(Alignment::Center);
             f.render_widget(ignored_count_paragraph, ignored_count_area);
 
+            // render current time in the middle bottom
+            let time_str = Local::now().format("%H:%M:%S").to_string();
+            let time_block = Block::default().borders(Borders::ALL).title("Time");
+            let time_paragraph = Paragraph::new(time_str)
+                .block(time_block)
+                .alignment(Alignment::Center);
+            let time_y = if app.search_mode {
+                size.height - 6
+            } else {
+                size.height - 3
+            };
+            f.render_widget(time_paragraph, Rect {
+                x: size.width / 2 - 10,
+                y: time_y,
+                width: 20,
+                height: 3,
+            });
+
+
             // --- If main search mode is active, render search tray at bottom ---
             if app.search_mode {
                 let search_text = format!("/{}", app.search_query.as_deref().unwrap_or(""));
