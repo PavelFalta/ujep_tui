@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file_path = &args[1];
 
     // Fetch the timetable if the file does not exist.
-    // fetch_timetable().await?;
+    fetch_timetable().await?;
 
 
     // Read and parse the JSON file.
