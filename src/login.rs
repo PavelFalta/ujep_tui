@@ -148,6 +148,7 @@ async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_js
 fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Error>> {
     let mut stdout = io::stdout();
     crossterm::terminal::enable_raw_mode()?;
+    crossterm::execute!(stdout, crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
