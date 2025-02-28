@@ -503,7 +503,9 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 [t]: Toggle clock
 [h]: Toggle help
 [i]: Toggle ignore menu
-[q]: Quit"#;
+[q]: Quit
+
+@Pavel Falta"#;
 
                 let overlay = Paragraph::new(help_text)
                     .block(
