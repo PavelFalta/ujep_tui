@@ -83,8 +83,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load ignored IDs from cache.
     let ignored_ids = load_ignored_ids();
 
-    let timestamp = timetable.timestamp;
-    let dt = chrono::NaiveDateTime::from_timestamp(timestamp as i64, 0);
+
+    // generate a NaiveDateTime
+    let dt = chrono::Local::now().naive_local();
+    
     // Create our app and sort courses by start time.
     let mut app = App::new(courses, Some(ignored_ids));
     app.last_update = Some(dt);
