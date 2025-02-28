@@ -86,7 +86,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timestamp = timetable.timestamp;
     let now = chrono::Local::now().timestamp() as u32;
     if now > timestamp {
-        eprintln!("Warning: The timetable data is outdated by {} seconds.", now - timestamp);
+        // convert to datetime and compare
+        let dt = chrono::NaiveDateTime::from_timestamp(timestamp as i64, 0);
+        let dt = dt.format("%d.%m.%Y %H:%M:%S").to_string();
+        eprintln!("Warning: The timetable data is outdated (last updated: {}).", dt);
     }
 
     // Create our app and sort courses by start time.
