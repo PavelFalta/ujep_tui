@@ -1,4 +1,7 @@
-use std::io;
+use std::fs;
+use std::io::{self, Write};
+use std::path::Path;
+use std::env;
 
 use ratatui::{
     backend::CrosstermBackend,
@@ -12,8 +15,10 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, ACCEPT_ENCODING, CONNECTION, CONTENT_TYPE, HOST, USER_AGENT};
+use serde_json::json;
 
-pub fn run_login() -> Result<(), io::Error> {
+pub async fn run_login() -> Result<(), io::Error> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -82,6 +87,9 @@ pub fn run_login() -> Result<(), io::Error> {
                 InputMode::Password => match key.code {
                     KeyCode::Enter => {
                         // Handle login logic here
+                        if let Err(e) = login_and_cache_token(&username, &password).await {
+                            eprintln!("Login failed: {}", e);
+                        }
                         break;
                     }
                     KeyCode::Tab => input_mode = InputMode::Username,
@@ -112,4 +120,54 @@ pub fn run_login() -> Result<(), io::Error> {
 enum InputMode {
     Username,
     Password,
+}
+
+async fn login_and_cache_token(username: &str, password: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let client = reqwest::Client::new();
+
+    let body = json!({
+        "device": {
+            "osVersion": "18.1.1",
+            "token": "",
+            "type": 2,
+            "deviceInfo": "iOS iPhone11, 2",
+            "installationId": "EAEBDC53-0CCE-4533-87EB-ED07230F1DEB"
+        },
+        "loginType": 1,
+        "login": username,
+        "password": password
+    });
+
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
+    headers.insert(USER_AGENT, HeaderValue::from_static("Dalvik/2.1.0 (Linux; U; Android 7.1.2; Nexus 5X Build/N2G48C)"));
+    headers.insert(HOST, HeaderValue::from_static("ujepice.ujep.cz"));
+    headers.insert("accept-language", HeaderValue::from_static("en"));
+    headers.insert("Client-type", HeaderValue::from_static("iOS"));
+    headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
+    headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate, br"));
+    headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
+    headers.insert("Client-version", HeaderValue::from_static("3.30.0"));
+    headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
+
+    let response = client.post("https://ujepice.ujep.cz/api/internal/login/stag")
+        .json(&body)
+        .headers(headers.clone())
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    println!("{:#?}", response);
+
+    let access_token = response["data"]["accessToken"].as_str().unwrap_or_default();
+
+    if !access_token.is_empty() {
+        let cache_dir = Path::new("cache/ujep_timetable");
+        fs::create_dir_all(cache_dir)?;
+        let mut file = fs::File::create(cache_dir.join("bearer_token"))?;
+        file.write_all(access_token.as_bytes())?;
+    }
+
+    Ok(())
 }
