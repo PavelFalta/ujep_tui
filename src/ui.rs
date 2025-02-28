@@ -351,7 +351,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             // --- Render help overlay if active (with solid black background) ---
             if app.show_help {
-                let overlay_area = center_rect(50, 22, size);
+                let overlay_area = center_rect(50, 50, size);
                 // Clear the area completely
                 f.render_widget(Clear, overlay_area);
                 let bg_block = Block::default().style(Style::default().bg(Color::Black));
