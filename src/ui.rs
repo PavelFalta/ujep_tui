@@ -327,171 +327,13 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(label_paragraph, label_area);
             }
 
-            // Show fullscreen time only
+            //show fullscreen time only
             if app.show_clock {
-                // Clear entire screen
+                // clear entire screen
                 f.render_widget(Clear, size);
                 let time_str = Local::now().format("%H:%M:%S").to_string();
-                let ascii_numbers = vec![
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-888    888    
-888    888    
-888    888    
-888    888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                    "              
-              
-              
- d888         
-d8888         
-  888         
-  888         
-  888         
-  888         
-  888         
-8888888       
-              
-              
-              ",
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-       888    
-     .d88P    
- .od888P\"     
-d88P\"         
-888\"          
-888888888     
-              
-              
-              ",
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-     .d88P    
-    8888\"     
-     \"Y8b.    
-888    888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                    "              
-              
-              
-    d8888     
-   d8P888     
-  d8P 888     
- d8P  888     
-d88   888     
-8888888888    
-      888     
-      888     
-              
-              
-              ",
-                    "              
-              
-              
-888888888     
-888           
-888           
-8888888b.     
-     \"Y88b    
-       888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-888           
-888d888b.     
-888P \"Y88b    
-888    888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                    "              
-              
-              
-8888888888    
-      d88P    
-     d88P     
-    d88P      
- 88888888     
-  d88P        
- d88P         
-d88P          
-              
-              
-              ",
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-Y88b. d88P    
- \"Y88888\"     
-.d8P\"\"Y8b.    
-888    888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                    "              
-              
-              
- .d8888b.     
-d88P  Y88b    
-888    888    
-Y88b. d888    
- \"Y888P888    
-       888    
-Y88b  d88P    
- \"Y8888P\"     
-              
-              
-              ",
-                ];
-
-                let mut ascii_time = String::new();
-                for line in 0..14 {
-                    for ch in time_str.chars() {
-                        if ch == ':' {
-                            ascii_time.push_str("     \n     \n     \n     \n     \n     \n     \n     \n     \n     \n     \n     \n     \n     \n");
-                        } else {
-                            let digit = ch.to_digit(10).unwrap() as usize;
-                            let lines: Vec<&str> = ascii_numbers[digit].lines().collect();
-                            ascii_time.push_str(lines[line]);
-                            ascii_time.push(' ');
-                        }
-                    }
-                    ascii_time.push('\n');
-                }
-
                 let time_block = Block::default().borders(Borders::ALL).title("Current Time");
-                let time_paragraph = Paragraph::new(ascii_time)
+                let time_paragraph = Paragraph::new(time_str)
                     .block(time_block)
                     .alignment(Alignment::Center)
                     .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow).add_modifier(Modifier::ITALIC));
@@ -499,10 +341,13 @@ Y88b  d88P
                 // Center the time vertically
                 let centered_area = Rect {
                     x: 0,
-                    y: size.height / 2 - 7,
+                    y: size.height / 2 - 1,
                     width: size.width,
-                    height: 14,
+                    height: 3,
                 };
+
+                // Adjust font size based on terminal size
+
 
                 f.render_widget(time_paragraph, centered_area);
             }
