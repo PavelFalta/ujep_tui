@@ -17,32 +17,49 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate, br"));
     headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
     headers.insert("Client-version", HeaderValue::from_static("3.30.0"));
-    headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
 
+    let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+    cache_path.push("ujep_timetable");
+    std::fs::create_dir_all(&cache_path)?;
+    cache_path.push("bearer");
 
-    let login_response = login(&client, &headers).await?;
-
-    let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default();
-    if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
-        let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-        cache_path.push("ujep_timetable");
-        std::fs::create_dir_all(&cache_path)?;
-        cache_path.push("bearer");
-
-        let mut file = File::create(cache_path)?;
-        file.write_all(access_token.as_bytes())?;
+    let access_token = if let Ok(mut file) = File::open(&cache_path) {
+        let mut token = String::new();
+        use std::io::Read;
+        file.read_to_string(&mut token)?;
+        token
     } else {
-        return Err("Login failed".into());
-    }
+        let login_response = login(&client, &headers).await?;
+        let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default().to_string();
+        if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
+            let mut file = File::create(&cache_path)?;
+            file.write_all(access_token.as_bytes())?;
+            access_token
+        } else {
+            return Err("Login failed".into());
+        }
+    };
+
     headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
 
-    let profile_response = fetch_profile(&client, &headers).await?;
+    let profile_response = match fetch_profile(&client, &headers).await {
+        Ok(profile) => profile,
+        Err(_) => {
+            let login_response = login(&client, &headers).await?;
+            let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default().to_string();
+            if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
+                let mut file = File::create(&cache_path)?;
+                file.write_all(access_token.as_bytes())?;
+                headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
+                fetch_profile(&client, &headers).await?
+            } else {
+                return Err("Login failed".into());
+            }
+        }
+    };
 
-    println!("Logged in as: {}", login_response);
     println!("Profile: {:#?}", profile_response);
 
-    let mut file = File::create("login.json")?;
-    file.write_all(serde_json::to_string_pretty(&login_response)?.as_bytes())?;
     let mut file = File::create("profile.json")?;
     file.write_all(serde_json::to_string_pretty(&profile_response)?.as_bytes())?;
 
