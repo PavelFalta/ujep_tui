@@ -76,8 +76,6 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get the cache directory
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
-    let file_path = cache_dir.join("timetable.json");
-
     // Create the directory if it doesn't exist
     let mut path = cache_dir.join("ujep_timetable");
     std::fs::create_dir_all(&path)?;
