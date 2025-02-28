@@ -474,8 +474,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 let help_text =
 r#"[Up/Down][j/k]: Move selection
 [Home/End]: Jump to first/last item
-[Enter]: Show details
-[Backspace]: Go back
+[Enter][l]: Show details
+[Backspace][h]: Go back
 [/]: Start search
 [t]: Toggle clock
 [h]: Toggle help
@@ -508,7 +508,7 @@ r#"[Up/Down][j/k]: Move selection
                 }
                 if app.show_clock {
                     match key.code {
-                        KeyCode::Char('t') | KeyCode::Backspace => {
+                        KeyCode::Char('t') | KeyCode::Backspace | KeyCode::Char('h')=> {
                             app.show_clock = false;
                         }
                         KeyCode::Char('q') => {
@@ -520,7 +520,7 @@ r#"[Up/Down][j/k]: Move selection
                 }
                 if app.show_details {
                     match key.code {
-                        KeyCode::Enter | KeyCode::Backspace => {
+                        KeyCode::Enter | KeyCode::Backspace | KeyCode::Char('h')=> {
                             app.show_details = false;
                         }
                         KeyCode::Char('q') => break,
@@ -600,26 +600,18 @@ r#"[Up/Down][j/k]: Move selection
                 // Normal key handling.
                 match key.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Enter => {
+                    KeyCode::Enter | KeyCode::Char('l')=> {
                         // only if selection is available
                         if app.selected.is_none() {
                             app.selected = Some(app.scroll_offset);
                         }
                         app.show_details = true;
                     }
-                    KeyCode::Char('l') => {
-                        app.show_details = true;
-                    }
                     KeyCode::Char('t') => {
                         app.show_clock = !app.show_clock;
                     }
                     KeyCode::Char('h') => {
-                        if app.show_details {
-                            app.show_details = false;
-                        }
-                        else {
-                            app.show_help = true;                    
-                        }
+                        app.show_help = true;
                     }
                     KeyCode::Char('i') => {
                         app.ignore_overlay_active = !app.ignore_overlay_active;
