@@ -387,7 +387,7 @@ r#"[Up/Down][j/k]: Move selection
 [Backspace]: Go back
 [/]: Start search
 [h]: Toggle help
-[i]: Toggle ignore menu (lowercase i)
+[i]: Toggle ignore menu
 [q]: Quit"#;
 
                 let overlay = Paragraph::new(help_text)
@@ -419,6 +419,7 @@ r#"[Up/Down][j/k]: Move selection
                         KeyCode::Enter | KeyCode::Backspace => {
                             app.show_details = false;
                         }
+                        KeyCode::Char('q') => break,
                         _ => {}
                     }
                     continue;
