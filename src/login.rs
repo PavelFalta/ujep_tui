@@ -44,30 +44,39 @@ pub async fn run_login() -> io::Result<()> {
 
             let username_input = Paragraph::new(username.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Username"))
-                .style(Style::default().fg(Color::White));
+                .style(Style::default().fg(if input_mode == InputMode::Username { Color::Yellow } else { Color::White }));
 
             let password_input = Paragraph::new(password.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Password"))
-                .style(Style::default().fg(Color::White));
+                .style(Style::default().fg(if input_mode == InputMode::Password { Color::Yellow } else { Color::White }));
 
             f.render_widget(username_input, chunks[0]);
             f.render_widget(password_input, chunks[1]);
         })?;
 
         if let Some(key) = rx.recv().await {
-            match input_mode {
-                InputMode::Username => match key.code {
-                    KeyCode::Enter => input_mode = InputMode::Password,
-                    KeyCode::Char(c) => username.push(c),
-                    KeyCode::Backspace => { username.pop(); },
-                    _ => {}
-                },
-                InputMode::Password => match key.code {
-                    KeyCode::Enter => break,
-                    KeyCode::Char(c) => password.push(c),
-                    KeyCode::Backspace => { password.pop(); },
-                    _ => {}
-                },
+            match key.code {
+                KeyCode::Char('q') => break,
+                KeyCode::Tab => {
+                    input_mode = match input_mode {
+                        InputMode::Username => InputMode::Password,
+                        InputMode::Password => InputMode::Username,
+                    }
+                }
+                _ => match input_mode {
+                    InputMode::Username => match key.code {
+                        KeyCode::Enter => input_mode = InputMode::Password,
+                        KeyCode::Char(c) => username.push(c),
+                        KeyCode::Backspace => { username.pop(); },
+                        _ => {}
+                    },
+                    InputMode::Password => match key.code {
+                        KeyCode::Enter => break,
+                        KeyCode::Char(c) => password.push(c),
+                        KeyCode::Backspace => { password.pop(); },
+                        _ => {}
+                    },
+                }
             }
         }
     }
@@ -75,6 +84,7 @@ pub async fn run_login() -> io::Result<()> {
     Ok(())
 }
 
+#[derive(PartialEq)]
 enum InputMode {
     Username,
     Password,
