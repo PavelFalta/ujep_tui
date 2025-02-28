@@ -25,26 +25,54 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
         if let Some(ref query) = app.search_query {
             if !query.is_empty() {
             let q = query.to_lowercase();
+            let mut parts = q.splitn(2, ':');
+            let (field, q) = if let (Some(field), Some(q)) = (parts.next(), parts.next()) {
+                (field, q)
+            } else {
+                ("", q.as_str())
+            };
+
             displayed.retain(|course| {
-                course.name.to_lowercase().contains(&q) ||
-                course.dept.to_lowercase().contains(&q) ||
-                course.abbr.to_lowercase().contains(&q) ||
-                course.year.to_lowercase().contains(&q) ||
-                course.semester.to_lowercase().contains(&q) ||
-                course.date.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
-                course.timeFrom.to_lowercase().contains(&q) ||
-                course.timeTo.to_lowercase().contains(&q) ||
-                course.place.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
-                course.room.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
-                course.class_type.to_lowercase().contains(&q) ||
-                course.day.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
-                course.weekType.to_lowercase().contains(&q) ||
-                course.weekFrom.to_string().contains(&q) ||
-                course.weekTo.to_string().contains(&q) ||
-                course.note.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
-                course.contact.to_lowercase().contains(&q) ||
-                course.statut.to_lowercase().contains(&q) ||
-                course.teachingTeacherStagId.to_string().contains(&q)
+                match field {
+                "type" => course.class_type.to_lowercase().contains(q),
+                "name" => course.name.to_lowercase().contains(q),
+                "dept" => course.dept.to_lowercase().contains(q),
+                "abbr" => course.abbr.to_lowercase().contains(q),
+                "year" => course.year.to_lowercase().contains(q),
+                "semester" => course.semester.to_lowercase().contains(q),
+                "date" => course.date.as_deref().unwrap_or("").to_lowercase().contains(q),
+                "timefrom" => course.timeFrom.to_lowercase().contains(q),
+                "timeto" => course.timeTo.to_lowercase().contains(q),
+                "place" => course.place.as_deref().unwrap_or("").to_lowercase().contains(q),
+                "room" => course.room.as_deref().unwrap_or("").to_lowercase().contains(q),
+                "day" => course.day.as_deref().unwrap_or("").to_lowercase().contains(q),
+                "weektype" => course.weekType.to_lowercase().contains(q),
+                "weekfrom" => course.weekFrom.to_string().contains(q),
+                "weekto" => course.weekTo.to_string().contains(q),
+                "note" => course.note.as_deref().unwrap_or("").to_lowercase().contains(q),
+                "contact" => course.contact.to_lowercase().contains(q),
+                "statut" => course.statut.to_lowercase().contains(q),
+                "teacherid" => course.teachingTeacherStagId.to_string().contains(q),
+                _ => course.name.to_lowercase().contains(&q) ||
+                     course.dept.to_lowercase().contains(&q) ||
+                     course.abbr.to_lowercase().contains(&q) ||
+                     course.year.to_lowercase().contains(&q) ||
+                     course.semester.to_lowercase().contains(&q) ||
+                     course.date.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                     course.timeFrom.to_lowercase().contains(&q) ||
+                     course.timeTo.to_lowercase().contains(&q) ||
+                     course.place.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                     course.room.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                     course.class_type.to_lowercase().contains(&q) ||
+                     course.day.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                     course.weekType.to_lowercase().contains(&q) ||
+                     course.weekFrom.to_string().contains(&q) ||
+                     course.weekTo.to_string().contains(&q) ||
+                     course.note.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
+                     course.contact.to_lowercase().contains(&q) ||
+                     course.statut.to_lowercase().contains(&q) ||
+                     course.teachingTeacherStagId.to_string().contains(&q)
+                }
             });
             }
         }
