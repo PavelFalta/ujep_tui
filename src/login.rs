@@ -23,8 +23,19 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     let login_response = login(&client, &headers).await?;
 
     let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default();
+    if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
+        let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+        cache_path.push("ujep_timetable");
+        std::fs::create_dir_all(&cache_path)?;
+        cache_path.push("bearer");
+
+        let mut file = File::create(cache_path)?;
+        file.write_all(access_token.as_bytes())?;
+    } else {
+        return Err("Login failed".into());
+    }
     headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
-    
+
     let profile_response = fetch_profile(&client, &headers).await?;
 
     println!("Logged in as: {}", login_response);
