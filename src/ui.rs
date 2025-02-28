@@ -348,7 +348,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(search_paragraph, main_chunks[2]);
 
                 // Add label in top right of the tray
-                let label_text = "try \"day: po\"";
+                let label_text = "\"day: po\"";
                 let label_area = Rect {
                     x: main_chunks[2].x + main_chunks[2].width.saturating_sub(label_text.len() as u16 + 2),
                     y: main_chunks[2].y,
