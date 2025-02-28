@@ -1,6 +1,5 @@
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT, ACCEPT, ACCEPT_LANGUAGE, ACCEPT_ENCODING, CONNECTION, HOST};
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT, ACCEPT, ACCEPT_ENCODING, CONNECTION, HOST};
 use serde_json::json;
-use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -10,7 +9,6 @@ use ratatui::Terminal;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::style::{Style, Color};
-use ratatui::text::{Spans, Span};
 use crossterm::event::{self, Event, KeyCode};
 use std::io;
 
@@ -161,12 +159,12 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     let mut username = String::new();
     let mut password = String::new();
     let mut input_mode = InputMode::Username;
-    let mut label = "Input STAG credentials".to_string();
+    let label = "Input STAG credentials".to_string();
     let label_len = label.len() as u16;
     let terminal_width = terminal.size()?.width;
     let padding = (terminal_width - label_len) / 2;
     let label = format!("{:padding$}{}", "", label, padding = padding as usize);
-    let mut disable_input = false;
+    let disable_input = false;
 
     loop {
         terminal.draw(|f| {

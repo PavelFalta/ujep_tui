@@ -4,7 +4,6 @@ mod ui;
 mod fetch_timetable;
 mod login;
 
-use std::env;
 use std::fs;
 use std::io;
 use std::collections::HashSet;
