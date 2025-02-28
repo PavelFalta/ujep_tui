@@ -269,13 +269,13 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             // display the last update time top right inside the table
             let last_update_text = if let Some(last_update) = app.last_update {
-                format!("Last update: {}", last_update.format("%Y-%m-%d %H:%M:%S"))
+                format!("{}", last_update.format("%Y-%m-%d %H:%M:%S"))
             } else {
-                "Last update: N/A".to_string()
+                "N/A".to_string()
             };
             let last_update_area = Rect {
-                x: table_area.x + table_area.width.saturating_sub(30),
-                y: table_area.y,
+                x: size.width.saturating_sub(50),
+                y: 0,
                 width: 30,
                 height: 3,
             };
