@@ -1,6 +1,10 @@
 {
-  "code": -205,
-  "isError": true,
-  "message": "Typ klienta není předán",
-  "statusCode": 403
+  "code": 1,
+  "data": {
+    "accessToken": "ZD59YMa9dfNrasnSL3x39Oj04mTvDIrpX96LcSqlVAQPQ6W1EGvSmBUVULTN7law",
+    "isLogged": true
+  },
+  "isError": false,
+  "message": "Uživatel přihlášen",
+  "statusCode": 200
 }

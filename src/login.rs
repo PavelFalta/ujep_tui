@@ -8,12 +8,15 @@ use std::path::PathBuf;
 pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let mut headers = HeaderMap::new();
-    headers.insert(USER_AGENT, HeaderValue::from_static("UJEP/1.0.0 (iPhone; iOS 14.4; Scale/2.00)"));
-    headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
-    headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
+    headers.insert(USER_AGENT, HeaderValue::from_static("Dalvik/2.1.0 (Linux; U; Android 7.1.2; Nexus 5X Build/N2G48C)"));
+    headers.insert(HOST, HeaderValue::from_static("ujepice.ujep.cz"));
+    headers.insert("accept-language", HeaderValue::from_static("en"));
+    headers.insert("Client-type", HeaderValue::from_static("iOS"));
+    headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
     headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate, br"));
     headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
-    headers.insert(HOST, HeaderValue::from_static("ujepice.ujep.cz"));
+    headers.insert("Client-version", HeaderValue::from_static("3.30.0"));
     headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
 
 
