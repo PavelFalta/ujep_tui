@@ -7,8 +7,8 @@ use std::path::PathBuf;
 use chrono::Local;
 use dirs;
 
-async fn fetch_timetable_data(client: &reqwest::Client, headers: &HeaderMap, stagid: &str, current_year: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let url = format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year={}", stagid, current_year);
+async fn fetch_timetable_data(client: &reqwest::Client, headers: &HeaderMap, stagid: &str, default_year: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let url = format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year={}", stagid, default_year);
     let response = client.get(&url)
         .headers(headers.clone())
         .send()
@@ -71,9 +71,10 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
     let profile_response: serde_json::Value = serde_json::from_str(&profile_data)?;
 
     let stagid = profile_response["data"]["roles"]["student"][0]["roleId"].as_str().unwrap_or_default();
-    let current_year = profile_response["data"]["years"]["currentYear"].as_str().unwrap_or_default();
+    let default_year = profile_response["data"]["years"]["defaultYear"].as_str().unwrap_or_default();
+    println!("Fetching timetable for stagid {} and year {}", stagid, default_year);
     
-    let timetable_response = fetch_timetable_data(&client, &headers, stagid, current_year).await?;
+    let timetable_response = fetch_timetable_data(&client, &headers, stagid, default_year).await?;
 
     save_timetable_to_file(&timetable_response)?;
 
