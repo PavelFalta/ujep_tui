@@ -327,6 +327,24 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(label_paragraph, label_area);
             }
 
+            //show fullscreen time only
+            if app.show_clock {
+                // clear entire screen
+                f.render_widget(Clear, Rect::default());
+                let time_str = Local::now().format("%H:%M:%S").to_string();
+                let time_block = Block::default().borders(Borders::ALL).title("Current Time");
+                let time_area = Rect {
+                    x: 0,
+                    y: 0,
+                    width: size.width,
+                    height: size.height,
+                };
+                let time_paragraph = Paragraph::new(time_str)
+                    .block(time_block)
+                    .alignment(Alignment::Center);
+                f.render_widget(time_paragraph, time_area);
+            }
+
             // --- Render ignore overlay if active ---
             if app.ignore_overlay_active {
                 draw_ignore_overlay(f, size, app);
@@ -436,6 +454,18 @@ r#"[Up/Down][j/k]: Move selection
                     }
                     continue;
                 }
+                if app.show_clock {
+                    match key.code {
+                        KeyCode::Char('t') | KeyCode::Backspace => {
+                            app.show_clock = false;
+                        }
+                        KeyCode::Char('q') => {
+                            break;
+                        }
+                        _ => {}
+                    }
+                    continue;
+                }
                 if app.show_details {
                     match key.code {
                         KeyCode::Enter | KeyCode::Backspace => {
@@ -520,6 +550,9 @@ r#"[Up/Down][j/k]: Move selection
                     KeyCode::Char('q') => break,
                     KeyCode::Enter => {
                         app.show_details = true;
+                    }
+                    KeyCode::Char('t') => {
+                        app.show_clock = !app.show_clock;
                     }
                     KeyCode::Char('h') => {
                         app.show_help = true;
