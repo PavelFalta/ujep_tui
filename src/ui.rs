@@ -490,7 +490,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             
             if app.show_help {
-                let overlay_area = center_rect(50, 25, size);
+                let overlay_area = center_rect(50, 35, size);
                 f.render_widget(Clear, overlay_area);
                 let bg_block = Block::default().style(Style::default().bg(Color::Black));
                 f.render_widget(bg_block, overlay_area);
@@ -503,9 +503,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 [t]: Toggle clock
 [h]: Toggle help
 [i]: Toggle ignore menu
-[q]: Quit
-
-@Pavel Falta"#;
+[q]: Quit"#;
 
                 let overlay = Paragraph::new(help_text)
                     .block(
