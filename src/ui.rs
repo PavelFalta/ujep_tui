@@ -345,6 +345,16 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     width: size.width,
                     height: 3,
                 };
+
+                // Adjust font size based on terminal size
+                let font_size = if size.width > 80 && size.height > 24 {
+                    Modifier::BOLD | Modifier::ITALIC | Modifier::UNDERLINED
+                } else {
+                    Modifier::BOLD | Modifier::ITALIC
+                };
+
+                let time_paragraph = time_paragraph.style(Style::default().add_modifier(font_size).fg(Color::Yellow));
+
                 f.render_widget(time_paragraph, centered_area);
             }
 
