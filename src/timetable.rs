@@ -15,7 +15,7 @@ pub struct Data {
     pub courseActions: Vec<CourseAction>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CourseAction {
     pub id: Option<u32>,
     pub name: Option<String>,

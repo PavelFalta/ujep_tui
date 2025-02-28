@@ -308,7 +308,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             } else {
                 "N/A".to_string()
             };
-            let last_update_block = Block::default().borders(Borders::ALL).title("Last sync");
+            let last_update_block = Block::default().borders(Borders::ALL).title("Last [s]ync");
             let last_update_area = Rect {
                 x: size.width.saturating_sub(23),
                 y: 0,
@@ -367,13 +367,18 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 size.height - 3
             };
             let clear_rect = Rect {
+                x: size.width / 2 - 11,
+                y: time_y,
+                width: 22,
+                height: 2,
+            };
+            f.render_widget(Clear, clear_rect);
+            f.render_widget(time_paragraph, Rect {
                 x: size.width / 2 - 10,
                 y: time_y,
                 width: 20,
                 height: 3,
-            };
-            f.render_widget(Clear, clear_rect);
-            f.render_widget(time_paragraph, clear_rect);
+            });
 
             
             if app.search_mode {
@@ -490,19 +495,20 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             
             if app.show_help {
-                let overlay_area = center_rect(50, 25, size);
+                let overlay_area = center_rect(50, 27, size);
                 f.render_widget(Clear, overlay_area);
                 let bg_block = Block::default().style(Style::default().bg(Color::Black));
                 f.render_widget(bg_block, overlay_area);
 
-                let help_text = r#"[Up/Down][j/k]: Move selection
-[Home/End]: Jump to first/last item
+                let help_text = r#"[Home/End]: Jump to first/last item
+[Up/Down][j/k]: Move selection
 [Enter][l]: Show details
+[s]: Sync the timetable
+[i]: Toggle ignore menu
 [Backspace][h]: Go back
 [/]: Start search
 [t]: Toggle clock
 [h]: Toggle help
-[i]: Toggle ignore menu
 [q]: Quit"#;
 
                 let overlay = Paragraph::new(help_text)
@@ -517,8 +523,8 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
                 let additional_text = "www.github.com/PavelFalta";
                 let additional_area = Rect {
-                    x: overlay_area.x + 2,
-                    y: overlay_area.y + overlay_area.height.saturating_sub(3),
+                    x: 0,
+                    y: size.height.saturating_sub(3),
                     width: additional_text.len() as u16 + 2,
                     height: 3,
                 };
@@ -649,6 +655,10 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 
                 match key.code {
                     KeyCode::Char('q') => break,
+                    // throw a special key to the event loop to force a refresh
+                    KeyCode::Char('s') => {
+                        return Err(io::Error::new(io::ErrorKind::Interrupted, "forced refresh"));
+                    }
                     KeyCode::Enter | KeyCode::Char('l') => {
                         
                         if app.selected.is_none() {
