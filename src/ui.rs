@@ -310,44 +310,67 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 draw_ignore_overlay(f, size, app);
             }
 
-            if app.show_details {
-                if let Some(selected) = app.selected {
-                    if let Some(course) = final_displayed.get(selected) {
-                        let details_text = format!(
-                            "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
-                            course.id,
-                            course.name,
-                            course.dept,
-                            course.abbr,
-                            course.year,
-                            course.semester,
-                            course.date.as_deref().unwrap_or("N/A"),
-                            course.timeFrom,
-                            course.timeTo,
-                            course.place.as_deref().unwrap_or("N/A"),
-                            course.room.as_deref().unwrap_or("N/A"),
-                            course.class_type,
-                            course.day.as_deref().unwrap_or("N/A"),
-                            course.weekType,
-                            course.weekFrom,
-                            course.weekTo,
-                            course.note.as_deref().unwrap_or("N/A"),
-                            course.contact,
-                            course.statut,
-                            course.teachingTeacherStagId,
-                        );
-                        let details_area = center_rect(50, 50, size);
-                        let details_block = Block::default().borders(Borders::ALL).title("Details");
-                        let details_paragraph = Paragraph::new(details_text)
-                            .block(details_block)
-                            .alignment(Alignment::Center);
-                        f.render_widget(Clear, details_area);
-                        let bg_block = Block::default().style(Style::default().bg(Color::Black));
-                        f.render_widget(bg_block, details_area);
-                        f.render_widget(details_paragraph, details_area);
-                    }
-                }
-            }
+                        if app.show_details {
+                            if let Some(selected) = app.selected {
+                                if let Some(course) = final_displayed.get(selected) {
+                                    let details_text = format!(
+                                        "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
+                                        course.id,
+                                        course.name,
+                                        course.dept,
+                                        course.abbr,
+                                        course.year,
+                                        course.semester,
+                                        course.date.as_deref().unwrap_or("N/A"),
+                                        course.timeFrom,
+                                        course.timeTo,
+                                        course.place.as_deref().unwrap_or("N/A"),
+                                        course.room.as_deref().unwrap_or("N/A"),
+                                        course.class_type,
+                                        course.day.as_deref().unwrap_or("N/A"),
+                                        course.weekType,
+                                        course.weekFrom,
+                                        course.weekTo,
+                                        course.note.as_deref().unwrap_or("N/A"),
+                                        course.contact,
+                                        course.statut,
+                                        course.teachingTeacherStagId,
+                                    );
+                                    let details_area = center_rect(50, 50, size);
+                                    let details_block = Block::default().borders(Borders::ALL).title("Details");
+                                    let details_paragraph = Paragraph::new(details_text)
+                                        .block(details_block)
+                                        .alignment(Alignment::Center);
+                                    f.render_widget(Clear, details_area);
+                                    let bg_block = Block::default().style(Style::default().bg(Color::Black));
+                                    f.render_widget(bg_block, details_area);
+                                    f.render_widget(details_paragraph, details_area);
+
+                                    // Show ongoing or next label in the top right
+                                    let label_text = if is_course_ongoing(course, now) {
+                                        "ONGOING"
+                                    } else if Some(selected) == next_index {
+                                        "NEXT"
+                                    } else {
+                                        ""
+                                    };
+
+                                    if !label_text.is_empty() {
+                                        let label_area = Rect {
+                                            x: details_area.x + details_area.width.saturating_sub(10),
+                                            y: details_area.y,
+                                            width: 10,
+                                            height: 3,
+                                        };
+                                        let label_block = Block::default().borders(Borders::ALL).title("Status");
+                                        let label_paragraph = Paragraph::new(label_text)
+                                            .block(label_block)
+                                            .alignment(Alignment::Center);
+                                        f.render_widget(label_paragraph, label_area);
+                                    }
+                                }
+                            }
+                        }
 
             // --- Render help overlay if active (with solid black background) ---
             if app.show_help {
