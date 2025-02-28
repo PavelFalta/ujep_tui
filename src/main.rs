@@ -53,21 +53,18 @@ fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
     }
 }
 
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Expect one command-line argument: the path to the timetable JSON file.
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: {} <path_to_timetable.json>", args[0]);
-        std::process::exit(1);
-    }
-    let file_path = &args[1];
-
-    // Fetch the timetable if the file does not exist.
+    // Fetch the timetable.
     fetch_timetable().await?;
 
+
     // Read and parse the JSON file.
-    let json_data = fs::read_to_string(file_path)?;
+    let mut path = cache_dir().unwrap();
+    path.push("ujep_timetable");
+    path.push("timetable.json");
+    let json_data = fs::read_to_string(path)?;
     let replacements = [
         ("Á", "A"), ("á", "a"), ("Č", "C"), ("č", "c"), ("Ď", "D"), ("ď", "d"), 
         ("É", "E"), ("é", "e"), ("Ě", "E"), ("ě", "e"), ("Í", "I"), ("í", "i"), 
