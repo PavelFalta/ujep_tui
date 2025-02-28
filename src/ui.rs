@@ -363,6 +363,9 @@ r#"[Up/Down]: Move selection
                                 app.toggle_ignore(course.id);
                             }
                         }
+                        KeyCode::Char('c') => {
+                            app.ignored_ids.clear();
+                        }
                         KeyCode::Char('q') => break,
                         _ => {}
                     }
