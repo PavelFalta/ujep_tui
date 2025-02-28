@@ -34,9 +34,9 @@ pub fn run_login() -> Result<(), io::Error> {
                 .constraints(
                     [
                         Constraint::Percentage(40),
-                        Constraint::Percentage(20),
-                        Constraint::Percentage(20),
-                        Constraint::Percentage(20),
+                        Constraint::Percentage(10),
+                        Constraint::Percentage(10),
+                        Constraint::Percentage(40),
                     ]
                     .as_ref(),
                 )
@@ -51,7 +51,8 @@ pub fn run_login() -> Result<(), io::Error> {
                 }));
             f.render_widget(username_block, chunks[1]);
 
-            let password_block = Paragraph::new(password.as_ref())
+            let password_display: String = "*".repeat(password.len());
+            let password_block = Paragraph::new(password_display.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Password"))
                 .style(Style::default().fg(if input_mode == InputMode::Password {
                     Color::Yellow
@@ -64,7 +65,7 @@ pub fn run_login() -> Result<(), io::Error> {
         if let Event::Key(key) = event::read()? {
             match input_mode {
                 InputMode::Username => match key.code {
-                    KeyCode::Enter => input_mode = InputMode::Password,
+                    KeyCode::Enter | KeyCode::Tab => input_mode = InputMode::Password,
                     KeyCode::Char(c) => username.push(c),
                     KeyCode::Backspace => {
                         username.pop();
@@ -77,6 +78,7 @@ pub fn run_login() -> Result<(), io::Error> {
                         // Handle login logic here
                         break;
                     }
+                    KeyCode::Tab => input_mode = InputMode::Username,
                     KeyCode::Char(c) => password.push(c),
                     KeyCode::Backspace => {
                         password.pop();
