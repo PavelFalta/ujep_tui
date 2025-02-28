@@ -336,7 +336,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 let time_paragraph = Paragraph::new(time_str)
                     .block(time_block)
                     .alignment(Alignment::Center)
-                    .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow));
+                    .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow).add_modifier(Modifier::ITALIC));
 
                 // Center the time vertically
                 let centered_area = Rect {
