@@ -364,7 +364,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     width: label_text.len() as u16 + 2,
                     height: 3,
                 };
-                let label_block = Block::default().borders(Borders::ALL).title("Hint - Filtering");
+                let label_block = Block::default().borders(Borders::ALL).title("Hint");
                 let label_paragraph = Paragraph::new(label_text)
                     .block(label_block)
                     .alignment(Alignment::Center);
