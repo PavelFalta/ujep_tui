@@ -557,7 +557,10 @@ r#"[Up/Down][j/k]: Move selection
                 match key.code {
                     KeyCode::Char('q') => break,
                     KeyCode::Enter => {
-                        app.show_details = true;
+                        // only if selection is available
+                        if app.selected.is_some() {
+                            app.show_details = true;
+                        }
                     }
                     KeyCode::Char('t') => {
                         app.show_clock = !app.show_clock;
