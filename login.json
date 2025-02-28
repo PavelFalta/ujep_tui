@@ -1,6 +1,6 @@
 {
-  "code": -401,
+  "code": -205,
   "isError": true,
-  "message": "API klíč není předaný.",
-  "statusCode": 401
+  "message": "Typ klienta není předán",
+  "statusCode": 403
 }

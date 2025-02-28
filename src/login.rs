@@ -14,9 +14,14 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate, br"));
     headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
     headers.insert(HOST, HeaderValue::from_static("ujepice.ujep.cz"));
+    headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
+
 
     let login_response = login(&client, &headers).await?;
     let profile_response = fetch_profile(&client, &headers).await?;
+
+    println!("Logged in as: {}", login_response);
+    println!("Profile: {:#?}", profile_response);
 
     let mut file = File::create("login.json")?;
     file.write_all(serde_json::to_string_pretty(&login_response)?.as_bytes())?;

@@ -1,6 +1,6 @@
 {
-  "code": -501,
+  "code": -502,
   "isError": true,
-  "message": "Autorizace uživatele nebyla předaná.",
+  "message": "Autorizace uživatele je ve špatném formátu.",
   "statusCode": 401
 }
