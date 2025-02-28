@@ -300,6 +300,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             let help_paragraph = Paragraph::new(help_label)
                 .block(Block::default().borders(Borders::ALL))
                 .alignment(Alignment::Center);
+            f.render_widget(Clear, help_area);
             f.render_widget(help_paragraph, help_area);
 
             // --- Render ignored courses count in bottom right ---
@@ -317,6 +318,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             let ignored_count_paragraph = Paragraph::new(ignored_count_label)
                 .block(Block::default().borders(Borders::ALL))
                 .alignment(Alignment::Center);
+            f.render_widget(Clear, ignored_count_area);
             f.render_widget(ignored_count_paragraph, ignored_count_area);
 
             // render current time in the middle bottom
@@ -330,6 +332,13 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             } else {
                 size.height - 3
             };
+            f.render_widget(Clear, Rect {
+                x: size.width / 2 - 10,
+                y: time_y,
+                width: 20,
+                height: 3,
+            });
+
             f.render_widget(time_paragraph, Rect {
                 x: size.width / 2 - 10,
                 y: time_y,
