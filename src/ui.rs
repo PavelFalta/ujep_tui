@@ -195,22 +195,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             let table_area = main_chunks[1];
             let visible_count_table = cmp::max((table_area.height as usize).saturating_sub(3), 1);
 
-            // display the last update time top right inside the table
-            let last_update_text = if let Some(last_update) = app.last_update {
-                format!("Last update: {}", last_update.format("%Y-%m-%d %H:%M:%S"))
-            } else {
-                "Last update: N/A".to_string()
-            };
-            let last_update_area = Rect {
-                x: size.width.saturating_sub(30),
-                y: 0,
-                width: 30,
-                height: 3,
-            };
-            let last_update_paragraph = Paragraph::new(last_update_text)
-                .block(Block::default().borders(Borders::ALL).title("Last sync"))
-                .alignment(Alignment::Center);
-            f.render_widget(last_update_paragraph, last_update_area);
+
 
             // We'll clamp end based on final_displayed length.
             let end = cmp::min(app.scroll_offset + visible_count_table, final_displayed.len());
@@ -281,6 +266,23 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     Constraint::Length(8),
                 ]);
             f.render_widget(table, table_area);
+
+            // display the last update time top right inside the table
+            let last_update_text = if let Some(last_update) = app.last_update {
+                format!("Last update: {}", last_update.format("%Y-%m-%d %H:%M:%S"))
+            } else {
+                "Last update: N/A".to_string()
+            };
+            let last_update_area = Rect {
+                x: table_area.x + table_area.width.saturating_sub(30),
+                y: table_area.y,
+                width: 30,
+                height: 3,
+            };
+            let last_update_paragraph = Paragraph::new(last_update_text)
+                .block(Block::default().borders(Borders::ALL).title("Last sync"))
+                .alignment(Alignment::Center);
+            f.render_widget(last_update_paragraph, last_update_area);
 
             // --- Render help label above ignored courses count ---
             let help_label = "[h]elp";
