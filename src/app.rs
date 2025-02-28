@@ -26,10 +26,6 @@ pub struct App<'a> {
     pub search_mode: bool,
     
     pub search_query: Option<String>,
-    
-    pub ignore_search_mode: bool,
-    
-    pub ignore_search_query: Option<String>,
 
     pub show_clock: bool,
     pub last_update: Option<NaiveDateTime>,
@@ -65,8 +61,6 @@ impl<'a> App<'a> {
             unique_courses,
             search_mode: false,
             search_query: None,
-            ignore_search_mode: false,
-            ignore_search_query: None,
             show_clock: false,
             last_update: None,
         }
