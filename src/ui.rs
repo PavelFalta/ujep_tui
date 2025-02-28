@@ -359,11 +359,14 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
                 let help_text =
 r#"[Up/Down]: Move selection
+[Home/End]: Jump to first/last item
+[Enter]: Show details / Toggle ignore
+[Backspace]: Clear selection / Exit overlay
 [/]: Start search (main mode)
-[Enter]: Apply search and exit search mode
-[Backspace]: Delete character; if empty, exit search mode (or clear selection)
+[Backspace]: Delete character; if empty, exit search mode
 [h]: Toggle help
 [i]: Toggle ignore menu (lowercase i)
+[c]: Clear ignored courses
 [q]: Quit"#;
 
                 let overlay = Paragraph::new(help_text)
