@@ -515,16 +515,16 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     .alignment(Alignment::Center);
                 f.render_widget(overlay, overlay_area);
 
-                let additional_text = "Press [Esc] to exit help";
+                let additional_text = "www.github.com/PavelFalta";
                 let additional_area = Rect {
-                    x: overlay_area.x + overlay_area.width.saturating_sub(additional_text.len() as u16 + 2),
+                    x: overlay_area.x + 2,
                     y: overlay_area.y + overlay_area.height.saturating_sub(3),
                     width: additional_text.len() as u16 + 2,
                     height: 3,
                 };
                 let additional_paragraph = Paragraph::new(additional_text)
-                    .block(Block::default().borders(Borders::ALL))
-                    .alignment(Alignment::Center);
+                    .block(Block::default().borders(Borders::ALL).title(":)"))
+                    .alignment(Alignment::Left);
                 f.render_widget(additional_paragraph, additional_area);
             }
         })?;
