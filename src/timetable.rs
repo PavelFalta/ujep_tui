@@ -37,7 +37,7 @@ pub struct CourseAction {
     pub note: Option<String>,
     pub contact: String,
     pub statut: String,
-    pub teachingTeacherStagId: u32,
+    pub teaching_teacher_stag_id: u32,
 }
 
 /// Attempts to parse the course's date/time into (start, end).

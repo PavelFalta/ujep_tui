@@ -52,7 +52,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 "note" => course.note.as_deref().unwrap_or("").to_lowercase().contains(q),
                 "contact" => course.contact.to_lowercase().contains(q),
                 "statut" => course.statut.to_lowercase().contains(q),
-                "teacherid" => course.teachingTeacherStagId.to_string().contains(q),
+                "teacherid" => course.teaching_teacher_stag_id.to_string().contains(q),
                 _ => course.name.to_lowercase().contains(&q) ||
                      course.dept.to_lowercase().contains(&q) ||
                      course.abbr.to_lowercase().contains(&q) ||
@@ -71,7 +71,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                      course.note.as_deref().unwrap_or("").to_lowercase().contains(&q) ||
                      course.contact.to_lowercase().contains(&q) ||
                      course.statut.to_lowercase().contains(&q) ||
-                     course.teachingTeacherStagId.to_string().contains(&q)
+                     course.teaching_teacher_stag_id.to_string().contains(&q)
                 }
             });
             }
@@ -416,7 +416,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                                         course.note.as_deref().unwrap_or("N/A"),
                                         course.contact,
                                         course.statut,
-                                        course.teachingTeacherStagId,
+                                        course.teaching_teacher_stag_id,
                                     );
                                     let details_area = center_rect(50, 50, size);
                                     let details_block = Block::default().borders(Borders::ALL).title("Details");
