@@ -31,7 +31,7 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_http_client() -> reqwest::Client {
-    println!("Creating HTTP client...");
+    //println!("Creating HTTP client...");
     reqwest::Client::new()
 }
 
@@ -59,24 +59,24 @@ fn get_cache_path(filename: &str) -> Result<PathBuf, Box<dyn std::error::Error>>
 }
 
 async fn get_access_token(client: &reqwest::Client, headers: &mut HeaderMap, cache_path: &PathBuf) -> Result<String, Box<dyn std::error::Error>> {
-    println!("Checking for cached access token...");
+    //println!("Checking for cached access token...");
     if let Ok(mut file) = File::open(cache_path) {
         let mut token = String::new();
         use std::io::Read;
         file.read_to_string(&mut token)?;
-        println!("Found cached access token.");
+        //println!("Found cached access token.");
         Ok(token)
     } else {
-        println!("No cached access token found. Logging in...");
+        //println!("No cached access token found. Logging in...");
         let login_response = login(client, headers).await?;
         let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default().to_string();
         if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
             let mut file = File::create(cache_path)?;
             file.write_all(access_token.as_bytes())?;
-            println!("Login successful. Access token cached.");
+            //println!("Login successful. Access token cached.");
             Ok(access_token)
         } else {
-            println!("Login failed.");
+            //println!("Login failed.");
             Err("Login failed".into())
         }
     }
@@ -85,21 +85,21 @@ async fn get_access_token(client: &reqwest::Client, headers: &mut HeaderMap, cac
 async fn fetch_profile_with_relogin(client: &reqwest::Client, headers: &mut HeaderMap, cache_path: &PathBuf) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     match fetch_profile(client, headers).await {
         Ok(profile) => {
-            println!("Profile fetched successfully.");
+            //println!("Profile fetched successfully.");
             Ok(profile)
         },
         Err(_) => {
-            println!("Failed to fetch profile. Re-logging in...");
+            //println!("Failed to fetch profile. Re-logging in...");
             let login_response = login(client, headers).await?;
             let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default().to_string();
             if login_response["data"]["isLogged"].as_bool().unwrap_or(false) {
                 let mut file = File::create(cache_path)?;
                 file.write_all(access_token.as_bytes())?;
                 headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
-                println!("Re-login successful. Fetching profile again...");
+                //println!("Re-login successful. Fetching profile again...");
                 fetch_profile(client, headers).await
             } else {
-                println!("Re-login failed.");
+                //println!("Re-login failed.");
                 Err("Login failed".into())
             }
         }
@@ -113,14 +113,14 @@ fn save_profile(profile_response: &serde_json::Value) -> Result<(), Box<dyn std:
     std::fs::create_dir_all(profile_path.parent().unwrap())?;
     let mut file = File::create(profile_path)?;
     file.write_all(serde_json::to_string_pretty(profile_response)?.as_bytes())?;
-    println!("Profile saved to profile.json");
+    //println!("Profile saved to profile.json");
     Ok(())
 }
 
 async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let (username, password) = prompt_for_credentials()?;
 
-    println!("Sending login request...");
+    //println!("Sending login request...");
     let body = json!({
         "device": {
             "osVersion": "18.1.1",
@@ -142,7 +142,7 @@ async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_js
         .json::<serde_json::Value>()
         .await?;
 
-    println!("Login response: {:#?}", response);
+    //println!("Login response: {:#?}", response);
     Ok(response)
 }
 fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Error>> {
@@ -212,7 +212,7 @@ enum InputMode {
 }
 
 async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    println!("Sending profile request...");
+    //println!("Sending profile request...");
     let response = client.get("https://ujepice.ujep.cz/api/profile/v2")
         .headers(headers.clone())
         .send()
