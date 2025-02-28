@@ -21,6 +21,10 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
 
 
     let login_response = login(&client, &headers).await?;
+
+    let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default();
+    headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
+    
     let profile_response = fetch_profile(&client, &headers).await?;
 
     println!("Logged in as: {}", login_response);

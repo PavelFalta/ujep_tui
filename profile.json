@@ -1,6 +1,43 @@
 {
-  "code": -502,
-  "isError": true,
-  "message": "Autorizace uživatele je ve špatném formátu.",
-  "statusCode": 401
+  "code": 1,
+  "data": {
+    "basic": {
+      "email": "paja.falta@gmail.com",
+      "faculties": [
+        "prf"
+      ],
+      "gender": "M",
+      "name": "Pavel Falta"
+    },
+    "roles": {
+      "employee": [],
+      "student": [
+        {
+          "faculty": {
+            "abbr": "prf",
+            "title": "Science"
+          },
+          "info": {
+            "plan": {
+              "form": "P",
+              "title": "Aplikovaná informatika",
+              "type": "B"
+            },
+            "year": 1
+          },
+          "roleId": "F24373"
+        }
+      ],
+      "teacher": []
+    },
+    "years": {
+      "defaultYear": 2024,
+      "selectableYears": [
+        2024
+      ]
+    }
+  },
+  "isError": false,
+  "message": "Profil zaslán",
+  "statusCode": 200
 }
