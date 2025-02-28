@@ -448,7 +448,7 @@ r#"[Up/Down]: Move selection
                         };
                         if count > 0 {
                             let last_idx = count.saturating_sub(1);
-                            app.selected = Some(last_idx);
+                            app.selected = Some(last_idx) - 3;
                             app.last_selected = Some(last_idx);
 
                             let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
