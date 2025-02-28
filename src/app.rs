@@ -79,12 +79,6 @@ impl<'a> App<'a> {
         }
     }
 
-    /// The index that should be highlighted: manual selection if present,
-    /// otherwise the last_selected, otherwise the upcoming index.
-    pub fn highlighted_index(&self) -> Option<usize> {
-        self.selected.or(self.last_selected).or_else(|| self.upcoming_index())
-    }
-
     /// Sort courses by their start time, placing soonest first.
     pub fn sort_courses_by_start(&mut self) {
         self.courses.sort_by_key(|course| {
