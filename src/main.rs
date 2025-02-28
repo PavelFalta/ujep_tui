@@ -83,6 +83,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load ignored IDs from cache.
     let ignored_ids = load_ignored_ids();
 
+    let timestamp = timetable.timestamp;
+    let now = chrono::Local::now().timestamp() as u32;
+    if now > timestamp {
+        eprintln!("Warning: The timetable data is outdated by {} seconds.", now - timestamp);
+    }
+
     // Create our app and sort courses by start time.
     let mut app = App::new(courses, Some(ignored_ids));
     app.sort_courses_by_start();
