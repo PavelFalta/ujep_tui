@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let timetable: Timetable = serde_json::from_str(&json_data)?;
 
-    let mut courses: Vec<_> = timetable.data.courseActions
+    let courses: Vec<_> = timetable.data.courseActions
         .iter()
         .filter(|c| c.date.is_some())  // Keep only courses with a date
         .collect();

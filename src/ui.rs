@@ -91,10 +91,6 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             }
         }
 
-        // We'll calculate a rough visible count from the terminal height (minus some overhead).
-        let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
-        let total = displayed.len();
-
         // 4) Further filter out past courses (keep ongoing + future).
         //    We'll call this filtered_displayed and prefer it if it's not empty,
         //    so we can also use it in key handling (Down key, etc.).
@@ -558,9 +554,10 @@ r#"[Up/Down][j/k]: Move selection
                     KeyCode::Char('q') => break,
                     KeyCode::Enter => {
                         // only if selection is available
-                        if app.selected.is_some() {
-                            app.show_details = true;
+                        if app.selected.is_none() {
+                            app.selected = Some(app.scroll_offset);
                         }
+                        app.show_details = true;
                     }
                     KeyCode::Char('t') => {
                         app.show_clock = !app.show_clock;

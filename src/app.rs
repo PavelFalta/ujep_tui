@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
 use crate::timetable::{CourseAction, parse_course_datetime};
 use std::collections::HashSet;
 pub struct App<'a> {

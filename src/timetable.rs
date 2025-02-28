@@ -49,13 +49,6 @@ pub fn parse_course_datetime(course: &CourseAction) -> Option<(NaiveDateTime, Na
     Some((date.and_time(start_time), date.and_time(end_time)))
 }
 
-/// Returns true if the course's end time is in the future (i.e. upcoming).
-pub fn is_course_upcoming(course: &CourseAction, now: NaiveDateTime) -> bool {
-    parse_course_datetime(course)
-        .map(|(_, end_dt)| end_dt >= now)
-        .unwrap_or(false)
-}
-
 /// Returns true if now is between the course's start and end.
 pub fn is_course_ongoing(course: &CourseAction, now: NaiveDateTime) -> bool {
     if let Some((start_dt, end_dt)) = parse_course_datetime(course) {
