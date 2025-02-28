@@ -5,9 +5,11 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Terminal;
 use std::io;
 use crossterm::event::{self, Event, KeyCode};
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
 use tokio::sync::mpsc;
 
 pub async fn run_login() -> io::Result<()> {
+    enable_raw_mode()?;
     let (tx, mut rx) = mpsc::channel(1);
 
     tokio::spawn(async move {
@@ -81,6 +83,7 @@ pub async fn run_login() -> io::Result<()> {
         }
     }
 
+    disable_raw_mode()?;
     Ok(())
 }
 
