@@ -452,7 +452,13 @@ r#"[Up/Down]: Move selection
                             app.last_selected = Some(last_idx);
 
                             let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
-                            app.scroll_offset = last_idx.saturating_sub(visible_count).saturating_add(1);
+                            if last_idx >= 40 {
+                                app.scroll_offset = last_idx
+                                    .saturating_sub(visible_count)
+                                    .saturating_add(1);
+                            } else {
+                                app.scroll_offset = last_idx.saturating_sub(visible_count);
+                            }
                         }
                     }
                     KeyCode::Backspace => {
