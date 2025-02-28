@@ -402,7 +402,7 @@ r#"[Up/Down]: Move selection
                         app.last_selected = Some(new_selected);
 
                         // Re-check how many lines are visible
-                        let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
+                        let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(6), 1);
 
                         // Ensure the selected item is within the visible range
                         if new_selected >= app.scroll_offset + visible_count {
