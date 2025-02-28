@@ -7,7 +7,7 @@ pub struct Timetable {
     pub message: String,
     pub statusCode: u32,
     pub data: Data,
-    pub retrieved_at: u32,
+    pub retrieved_at: String,
 }
 
 #[derive(Debug, Deserialize)]

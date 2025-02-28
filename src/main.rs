@@ -85,8 +85,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     // generate a NaiveDateTime
-    let dt = chrono::Local::now().naive_local();
-    
+    let dt = timetable.retrieved_at;
+    let dt = chrono::NaiveDateTime::parse_from_str(&dt, "%Y-%m-%d %H:%M:%S%.f").unwrap();
+
     // Create our app and sort courses by start time.
     let mut app = App::new(courses, Some(ignored_ids));
     app.last_update = Some(dt);
