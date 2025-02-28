@@ -329,28 +329,142 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             //show fullscreen time only
             if app.show_clock {
-                // clear entire screen
+                // Clear the entire screen.
                 f.render_widget(Clear, size);
+            
+                // Grab the current time in "HH:MM:SS" format.
                 let time_str = Local::now().format("%H:%M:%S").to_string();
+            
+                // -- Build ASCII art representation of the time_str --
+                // We define a helper function that returns 5 lines of ASCII for each character.
+                fn ascii_digit(ch: char) -> [&'static str; 5] {
+                    match ch {
+                        '0' => [
+                            "  __  ",
+                            " /  \\ ",
+                            "|    |",
+                            "|    |",
+                            " \\__/ ",
+                        ],
+                        '1' => [
+                            "      ",
+                            "   /| ",
+                            "    | ",
+                            "    | ",
+                            "    | ",
+                        ],
+                        '2' => [
+                            "  __  ",
+                            " /  \\ ",
+                            "    / ",
+                            "   /  ",
+                            "  /__ ",
+                        ],
+                        '3' => [
+                            "  __  ",
+                            " /  \\ ",
+                            "   _/ ",
+                            "     \\",
+                            " \\__/ ",
+                        ],
+                        '4' => [
+                            "      ",
+                            "   /| ",
+                            "  / | ",
+                            " /__|_",
+                            "    | ",
+                        ],
+                        '5' => [
+                            "  ___ ",
+                            " |    ",
+                            " |__  ",
+                            "    \\ ",
+                            " \\__/ ",
+                        ],
+                        '6' => [
+                            "  ___ ",
+                            " /    ",
+                            "/__   ",
+                            "|   \\ ",
+                            " \\__/ ",
+                        ],
+                        '7' => [
+                            "  ___ ",
+                            "     /",
+                            "    / ",
+                            "   /  ",
+                            "  /   ",
+                        ],
+                        '8' => [
+                            "  __  ",
+                            " /  \\ ",
+                            " \\__/ ",
+                            " /  \\ ",
+                            " \\__/ ",
+                        ],
+                        '9' => [
+                            "  __  ",
+                            " /  \\ ",
+                            " \\__/ ",
+                            "     \\",
+                            "  ___/",
+                        ],
+                        ':' => [
+                            "   ",
+                            " _ ",
+                            "   ",
+                            " _ ",
+                            "   ",
+                        ],
+                        _ => [
+                            "     ",
+                            "     ",
+                            "     ",
+                            "     ",
+                            "     ",
+                        ],
+                    }
+                }
+            
+                // Convert the current time string into multi-line ASCII art.
+                let mut ascii_lines = vec![String::new(); 5];
+                for c in time_str.chars() {
+                    let digit_art = ascii_digit(c);
+                    for (i, art_line) in digit_art.iter().enumerate() {
+                        ascii_lines[i].push_str(art_line);
+                        // Add a small space between characters to keep them separated.
+                        ascii_lines[i].push(' ');
+                    }
+                }
+                // Join the lines with newlines to form the final ASCII art string.
+                let ascii_time_str = ascii_lines.join("\n");
+            
+                // Create a block for the clock display.
                 let time_block = Block::default().borders(Borders::ALL).title("Current Time");
-                let time_paragraph = Paragraph::new(time_str)
+                // Wrap our ASCII art in a Paragraph widget.
+                let time_paragraph = Paragraph::new(ascii_time_str)
                     .block(time_block)
                     .alignment(Alignment::Center)
-                    .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow).add_modifier(Modifier::ITALIC));
-
-                // Center the time vertically
+                    .style(
+                        Style::default()
+                            .add_modifier(Modifier::BOLD)
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::ITALIC),
+                    );
+            
+                // Center the ASCII clock vertically and allow enough height for 5 lines.
+                let ascii_height = 5; // We know each digit block is 5 lines tall
                 let centered_area = Rect {
                     x: 0,
-                    y: size.height / 2 - 1,
+                    y: size.height / 2 - (ascii_height as u16 / 2),
                     width: size.width,
-                    height: 3,
+                    height: ascii_height as u16 + 2, // Some extra space for the borders
                 };
-
-                // Adjust font size based on terminal size
-
-
+            
+                // Finally, render the ASCII clock.
                 f.render_widget(time_paragraph, centered_area);
             }
+            
 
             // --- Render ignore overlay if active ---
             if app.ignore_overlay_active {
