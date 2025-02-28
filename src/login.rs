@@ -218,7 +218,6 @@ async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<
         .await?
         .json::<serde_json::Value>()
         .await?;
-    println!("Login response: {:#?}", response);
 
     Ok(response)
 }
