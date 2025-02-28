@@ -330,19 +330,22 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             //show fullscreen time only
             if app.show_clock {
                 // clear entire screen
-                f.render_widget(Clear, Rect::default());
+                f.render_widget(Clear, size);
                 let time_str = Local::now().format("%H:%M:%S").to_string();
                 let time_block = Block::default().borders(Borders::ALL).title("Current Time");
-                let time_area = Rect {
-                    x: 0,
-                    y: 0,
-                    width: size.width,
-                    height: size.height,
-                };
                 let time_paragraph = Paragraph::new(time_str)
                     .block(time_block)
-                    .alignment(Alignment::Center);
-                f.render_widget(time_paragraph, time_area);
+                    .alignment(Alignment::Center)
+                    .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow));
+
+                // Center the time vertically
+                let centered_area = Rect {
+                    x: 0,
+                    y: size.height / 2 - 1,
+                    width: size.width,
+                    height: 3,
+                };
+                f.render_widget(time_paragraph, centered_area);
             }
 
             // --- Render ignore overlay if active ---
