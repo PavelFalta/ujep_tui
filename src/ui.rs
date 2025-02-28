@@ -454,7 +454,7 @@ r#"[Up/Down]: Move selection
                                 app.scroll_offset = last_idx.saturating_sub(visible_count).saturating_add(1);
                             }
 
-                            app.selected = Some(last_idx);
+                            app.selected = Some(last_idx- 3);
                             app.last_selected = Some(last_idx);
                         }
                     }
