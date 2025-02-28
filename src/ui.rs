@@ -273,14 +273,15 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             } else {
                 "N/A".to_string()
             };
+            let last_update_block = Block::default().borders(Borders::ALL).title("Last sync");
             let last_update_area = Rect {
-                x: size.width.saturating_sub(50),
+                x: size.width.saturating_sub(40),
                 y: 0,
-                width: 30,
+                width: 23,
                 height: 3,
             };
             let last_update_paragraph = Paragraph::new(last_update_text)
-                .block(Block::default().borders(Borders::ALL).title("Last sync"))
+                .block(last_update_block)
                 .alignment(Alignment::Center);
             f.render_widget(last_update_paragraph, last_update_area);
 
