@@ -62,6 +62,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Read and parse the JSON file.
     let json_data = fs::read_to_string(file_path)?;
+    let replacements = [
+        ("Á", "A"), ("á", "a"), ("Č", "C"), ("č", "c"), ("Ď", "D"), ("ď", "d"), 
+        ("É", "E"), ("é", "e"), ("Ě", "E"), ("ě", "e"), ("Í", "I"), ("í", "i"), 
+        ("Ň", "N"), ("ň", "n"), ("Ó", "O"), ("ó", "o"), ("Ř", "R"), ("ř", "r"), 
+        ("Š", "S"), ("š", "s"), ("Ť", "T"), ("ť", "t"), ("Ú", "U"), ("ú", "u"), 
+        ("Ů", "U"), ("ů", "u"), ("Ý", "Y"), ("ý", "y"), ("Ž", "Z"), ("ž", "z")
+    ];
+    let mut json_data = json_data;
+    for &(from, to) in &replacements {
+        json_data = json_data.replace(from, to);
+    }
     let timetable: Timetable = serde_json::from_str(&json_data)?;
 
     let mut courses: Vec<_> = timetable.data.courseActions
