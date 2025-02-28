@@ -273,7 +273,11 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             let help_label = "[h]elp";
             let help_area = Rect {
                 x: size.width.saturating_sub(help_label.len() as u16 + 2),
-                y: size.height.saturating_sub(6),
+                y: if app.search_mode {
+                    size.height.saturating_sub(9)
+                } else {
+                    size.height.saturating_sub(6)
+                },
                 width: help_label.len() as u16 + 2,
                 height: 3,
             };
@@ -286,7 +290,11 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             let ignored_count_label = format!("[i]gnored: {}", app.ignored_ids.len());
             let ignored_count_area = Rect {
                 x: size.width.saturating_sub(ignored_count_label.len() as u16 + 2),
-                y: size.height.saturating_sub(3),
+                y: if app.search_mode {
+                    size.height.saturating_sub(6)
+                } else {
+                    size.height.saturating_sub(3)
+                },
                 width: ignored_count_label.len() as u16 + 2,
                 height: 3,
             };
@@ -305,7 +313,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(search_paragraph, main_chunks[2]);
 
                 // Add label in top right of the tray
-                let label_text = "try \"Day: po\"";
+                let label_text = "try \"day: po\"";
                 let label_area = Rect {
                     x: main_chunks[2].x + main_chunks[2].width.saturating_sub(label_text.len() as u16 + 2),
                     y: main_chunks[2].y,
