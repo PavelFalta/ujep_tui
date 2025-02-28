@@ -32,6 +32,7 @@ pub struct App<'a> {
     pub ignore_search_query: Option<String>,
 
     pub show_clock: bool,
+    pub last_update: Option<NaiveDate>,
 }
 
 impl<'a> App<'a> {
@@ -67,6 +68,7 @@ impl<'a> App<'a> {
             ignore_search_mode: false,
             ignore_search_query: None,
             show_clock: false,
+            last_update: None,
         }
     }
 
