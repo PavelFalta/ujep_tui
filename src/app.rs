@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use crate::timetable::{CourseAction, parse_course_datetime};
 use std::collections::HashSet;
 pub struct App<'a> {
@@ -32,7 +32,7 @@ pub struct App<'a> {
     pub ignore_search_query: Option<String>,
 
     pub show_clock: bool,
-    pub last_update: Option<NaiveDate>,
+    pub last_update: Option<NaiveDateTime>,
 }
 
 impl<'a> App<'a> {

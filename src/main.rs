@@ -84,16 +84,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ignored_ids = load_ignored_ids();
 
     let timestamp = timetable.timestamp;
-    let now = chrono::Local::now().timestamp() as u32;
-    if now > timestamp {
-        // convert to datetime and compare
-        let dt = chrono::NaiveDateTime::from_timestamp(timestamp as i64, 0);
-        let dt = dt.format("%d.%m.%Y %H:%M:%S").to_string();
-        eprintln!("Warning: The timetable data is outdated (last updated: {}).", dt);
-    }
-
+    let dt = chrono::NaiveDateTime::from_timestamp(timestamp as i64, 0);
     // Create our app and sort courses by start time.
     let mut app = App::new(courses, Some(ignored_ids));
+    app.last_update = Some(dt);
     app.sort_courses_by_start();
 
     // Scroll so that the upcoming course is near the top.
