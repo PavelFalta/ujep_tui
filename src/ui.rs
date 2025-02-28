@@ -358,15 +358,13 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(bg_block, overlay_area);
 
                 let help_text =
-r#"[Up/Down]: Move selection
+r#"[Up/Down][j/k]: Move selection
 [Home/End]: Jump to first/last item
-[Enter]: Show details / Toggle ignore
-[Backspace]: Clear selection / Exit overlay
-[/]: Start search (main mode)
-[Backspace]: Delete character; if empty, exit search mode
+[Enter]: Show details
+[Backspace]: Go back
+[/]: Start search
 [h]: Toggle help
 [i]: Toggle ignore menu (lowercase i)
-[c]: Clear ignored courses
 [q]: Quit"#;
 
                 let overlay = Paragraph::new(help_text)
