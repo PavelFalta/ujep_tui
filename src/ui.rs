@@ -292,7 +292,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                         let details_block = Block::default().borders(Borders::ALL).title("Details");
                         let details_paragraph = Paragraph::new(details_text)
                             .block(details_block)
-                            .alignment(Alignment::Left);
+                            .alignment(Alignment::Center);
                         f.render_widget(Clear, details_area);
                         let bg_block = Block::default().style(Style::default().bg(Color::Black));
                         f.render_widget(bg_block, details_area);
@@ -343,8 +343,18 @@ r#"[Up/Down]: Move selection
                     continue;
                 }
                 if app.show_details {
-                    if key.code == KeyCode::Enter {
-                        app.show_details = false;
+                    match key.code {
+                        KeyCode::Enter | KeyCode::Backspace => {
+                            app.show_details = false;
+                        }
+                        KeyCode::Char('i') => {
+                            if let Some(selected) = app.selected {
+                                if let Some(course) = final_displayed.get(selected) {
+                                    app.toggle_ignore(course.id);
+                                }
+                            }
+                        }
+                        _ => {}
                     }
                     continue;
                 }
