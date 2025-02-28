@@ -61,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Expect one command-line argument: the path to the timetable JSON file.
     // Fetch the timetable if the file does not exist.
     run_login().await?;
-    // fetch_timetable().await?;
+    //fetch_timetable().await?;
 
     // Read and parse the JSON file.
     let mut path = cache_dir().unwrap();

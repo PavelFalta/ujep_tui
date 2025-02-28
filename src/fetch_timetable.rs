@@ -3,7 +3,6 @@ use serde_json::json;
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use chrono::NaiveDateTime;
 use std::path::PathBuf;
 
 pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
