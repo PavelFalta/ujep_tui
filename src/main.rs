@@ -1,6 +1,7 @@
 mod timetable;
 mod app;
 mod ui;
+mod fetch_timetable;
 
 use std::env;
 use std::fs;
@@ -18,6 +19,7 @@ use dirs::cache_dir;
 use crate::timetable::Timetable;
 use crate::app::App;
 use crate::ui::run_app;
+use crate::fetch_timetable::fetch_timetable;
 
 #[derive(Serialize, Deserialize)]
 struct IgnoredIds {
@@ -51,7 +53,8 @@ fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Expect one command-line argument: the path to the timetable JSON file.
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
@@ -59,6 +62,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
     let file_path = &args[1];
+
+    // Fetch the timetable if the file does not exist.
+    fetch_timetable().await?;
 
     // Read and parse the JSON file.
     let json_data = fs::read_to_string(file_path)?;
