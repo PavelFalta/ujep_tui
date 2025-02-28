@@ -161,6 +161,12 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     let mut username = String::new();
     let mut password = String::new();
     let mut input_mode = InputMode::Username;
+    let mut label = "Input STAG credentials".to_string();
+    let label_len = label.len() as u16;
+    let terminal_width = terminal.size()?.width;
+    let padding = (terminal_width - label_len) / 2;
+    let label = format!("{:padding$}{}", "", label, padding = padding as usize);
+    let mut disable_input = false;
 
     loop {
         terminal.draw(|f| {
@@ -169,39 +175,50 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 .direction(Direction::Vertical)
                 .constraints([
                     Constraint::Percentage(40),
+                    Constraint::Length(1),
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Percentage(40),
                 ].as_ref())
                 .split(size);
 
+            let label_block = Paragraph::new(label.as_ref())
+                .block(Block::default().borders(Borders::NONE));
+            f.render_widget(label_block, chunks[1]);
+
             let username_block = Paragraph::new(username.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Username"))
-                .style(Style::default().fg(if input_mode == InputMode::Username { Color::Yellow } else { Color::White }));
-            f.render_widget(username_block, chunks[1]);
+                .style(Style::default().fg(if input_mode == InputMode::Username && !disable_input { Color::Yellow } else { Color::White }));
+            f.render_widget(username_block, chunks[2]);
 
             let password_display: String = password.chars().map(|_| '*').collect();
             let password_block = Paragraph::new(password_display.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Password"))
-                .style(Style::default().fg(if input_mode == InputMode::Password { Color::Yellow } else { Color::White }));
-            f.render_widget(password_block, chunks[2]);
+                .style(Style::default().fg(if input_mode == InputMode::Password && !disable_input { Color::Yellow } else { Color::White }));
+            f.render_widget(password_block, chunks[3]);
         })?;
 
-        if let Event::Key(key) = event::read()? {
-            match input_mode {
-                InputMode::Username => match key.code {
-                    KeyCode::Enter | KeyCode::Tab => input_mode = InputMode::Password,
-                    KeyCode::Char(c) => username.push(c),
-                    KeyCode::Backspace => { username.pop(); },
-                    _ => {}
-                },
-                InputMode::Password => match key.code {
-                    KeyCode::Enter => break,
-                    KeyCode::Tab => input_mode = InputMode::Username,
-                    KeyCode::Char(c) => password.push(c),
-                    KeyCode::Backspace => { password.pop(); },
-                    _ => {}
-                },
+        if !disable_input {
+            if let Event::Key(key) = event::read()? {
+                match input_mode {
+                    InputMode::Username => match key.code {
+                        KeyCode::Enter | KeyCode::Tab => input_mode = InputMode::Password,
+                        KeyCode::Char(c) => username.push(c),
+                        KeyCode::Backspace => { username.pop(); },
+                        _ => {}
+                    },
+                    InputMode::Password => match key.code {
+                        KeyCode::Enter => {
+                            // label = "Logging in...".to_string();
+                            // disable_input = true;
+                            break;
+                        },
+                        KeyCode::Tab => input_mode = InputMode::Username,
+                        KeyCode::Char(c) => password.push(c),
+                        KeyCode::Backspace => { password.pop(); },
+                        _ => {}
+                    },
+                }
             }
         }
     }
