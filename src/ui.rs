@@ -347,13 +347,6 @@ r#"[Up/Down]: Move selection
                         KeyCode::Enter | KeyCode::Backspace => {
                             app.show_details = false;
                         }
-                        KeyCode::Char('i') => {
-                            if let Some(selected) = app.selected {
-                                if let Some(course) = final_displayed.get(selected) {
-                                    app.toggle_ignore(course.id);
-                                }
-                            }
-                        }
                         _ => {}
                     }
                     continue;
