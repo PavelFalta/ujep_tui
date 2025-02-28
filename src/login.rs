@@ -13,7 +13,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-fn main() -> Result<(), io::Error> {
+pub fn run_login() -> Result<(), io::Error> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -100,6 +100,7 @@ fn main() -> Result<(), io::Error> {
     Ok(())
 }
 
+#[derive(PartialEq)]
 enum InputMode {
     Username,
     Password,

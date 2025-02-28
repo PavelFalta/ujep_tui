@@ -2,6 +2,7 @@ mod timetable;
 mod app;
 mod ui;
 mod fetch_timetable;
+mod login;
 
 use std::env;
 use std::fs;
@@ -20,6 +21,7 @@ use crate::timetable::Timetable;
 use crate::app::App;
 use crate::ui::run_app;
 use crate::fetch_timetable::fetch_timetable;
+use crate::login::run_login;
 
 #[derive(Serialize, Deserialize)]
 struct IgnoredIds {
@@ -58,6 +60,7 @@ fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Expect one command-line argument: the path to the timetable JSON file.
     // Fetch the timetable if the file does not exist.
+    run_login();
     fetch_timetable().await?;
 
     // Read and parse the JSON file.
