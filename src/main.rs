@@ -60,7 +60,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Fetch the timetable if the file does not exist.
     fetch_timetable().await?;
 
-
     // Read and parse the JSON file.
     let mut path = cache_dir().unwrap();
     path.push("ujep_timetable");
