@@ -30,6 +30,8 @@ pub struct App<'a> {
     pub ignore_search_mode: bool,
     /// The current ignore overlay search query.
     pub ignore_search_query: Option<String>,
+
+    pub show_clock: bool,
 }
 
 impl<'a> App<'a> {
@@ -64,6 +66,7 @@ impl<'a> App<'a> {
             search_query: None,
             ignore_search_mode: false,
             ignore_search_query: None,
+            show_clock: false,
         }
     }
 
