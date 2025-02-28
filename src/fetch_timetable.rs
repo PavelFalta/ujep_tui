@@ -1,6 +1,4 @@
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT, ACCEPT, ACCEPT_LANGUAGE, ACCEPT_ENCODING, CONNECTION, HOST};
-use serde_json::json;
-use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -72,7 +70,6 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
 
     let stagid = profile_response["data"]["roles"]["student"][0]["roleId"].as_str().unwrap_or_default();
     let default_year = profile_response["data"]["years"]["defaultYear"].as_i64().unwrap_or_default().to_string();
-    println!("Fetching timetable for stagid {} and year {}", stagid, default_year);
     
     let timetable_response = fetch_timetable_data(&client, &headers, stagid, &default_year).await?;
 
