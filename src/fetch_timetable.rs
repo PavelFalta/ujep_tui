@@ -5,42 +5,6 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let body = json!({
-        "device": {
-            "osVersion": "18.1.1",
-            "token": "",
-            "type": 2,
-            "deviceInfo": "iOS iPhone11, 2",
-            "installationId": "EAEBDC53-0CCE-4533-87EB-ED07230F1DEB"
-        },
-        "loginType": 1,
-        "login": env::var("USERNAME").unwrap_or_default(),
-        "password": env::var("PASSWORD").unwrap_or_default()
-    });
-
-    let response = client.post("https://ujepice.ujep.cz/api/internal/login/stag")
-        .json(&body)
-        .headers(headers.clone())
-        .send()
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
-
-    Ok(response)
-}
-
-async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let response = client.get("https://ujepice.ujep.cz/api/profile/v2")
-        .headers(headers.clone())
-        .send()
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
-
-    Ok(response)
-}
-
 async fn fetch_timetable_data(client: &reqwest::Client, headers: &HeaderMap, stagid: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let response = client.get(&format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year=2024", stagid))
         .headers(headers.clone())
@@ -82,23 +46,25 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
     headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate, br"));
     headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
     headers.insert("Client-version", HeaderValue::from_static("3.30.0"));
-    headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
 
-    let login_response = login(&client, &headers).await?;
-    println!("{:#?}", login_response);
+    let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+    cache_path.push("ujep_timetable");
+    std::fs::create_dir_all(&cache_path)?;
+    cache_path.push("bearer");
 
-    let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default();
-    headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
+    let bearer_token = std::fs::read_to_string(&cache_path)?;
+    headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", bearer_token))?);
 
-    let profile_response = fetch_profile(&client, &headers).await?;
-    println!("{:#?}", profile_response);
+    let mut profile_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
+    profile_path.push("ujep_timetable");
+    profile_path.push("profile.json");
+
+    let profile_data = std::fs::read_to_string(&profile_path)?;
+    let profile_response: serde_json::Value = serde_json::from_str(&profile_data)?;
 
     let stagid = profile_response["data"]["roles"]["student"][0]["roleId"].as_str().unwrap_or_default();
-    println!("stagid: {}", stagid);
-    println!("headers: {:#?}", headers);
-
+    
     let timetable_response = fetch_timetable_data(&client, &headers, stagid).await?;
-    println!("{:#?}", timetable_response);
 
     save_timetable_to_file(&timetable_response)?;
 
