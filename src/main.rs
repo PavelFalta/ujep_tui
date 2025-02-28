@@ -60,7 +60,7 @@ fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Expect one command-line argument: the path to the timetable JSON file.
     // Fetch the timetable if the file does not exist.
-    run_login();
+    run_login().await?;
     fetch_timetable().await?;
 
     // Read and parse the JSON file.
