@@ -440,22 +440,19 @@ r#"[Up/Down]: Move selection
                         app.scroll_offset = 0;
                     }
                     KeyCode::End => {
+                        // Jump to the last item if any exist
                         let count = if !filtered_displayed.is_empty() {
                             filtered_displayed.len()
                         } else {
                             displayed.len()
                         };
                         if count > 0 {
-                            let last_idx = count.saturating_sub(1);
-                            let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
-
-                            // Only adjust scroll if the item is not already visible
-                            if last_idx >= app.scroll_offset + visible_count {
-                                app.scroll_offset = last_idx.saturating_sub(visible_count).saturating_add(1);
-                            }
-
-                            app.selected = Some(last_idx- 3);
+                            let last_idx = count.saturating_add(2);
+                            app.selected = Some(last_idx - 3);
                             app.last_selected = Some(last_idx);
+
+                            let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(3), 1);
+                            app.scroll_offset = last_idx.saturating_sub(visible_count).saturating_add(1);
                         }
                     }
                     KeyCode::Backspace => {
