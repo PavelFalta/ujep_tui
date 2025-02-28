@@ -327,9 +327,9 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 f.render_widget(label_paragraph, label_area);
             }
 
-            //show fullscreen time only
+            // Show fullscreen time only
             if app.show_clock {
-                // clear entire screen
+                // Clear entire screen
                 f.render_widget(Clear, size);
                 let time_str = Local::now().format("%H:%M:%S").to_string();
                 let ascii_numbers = vec![
