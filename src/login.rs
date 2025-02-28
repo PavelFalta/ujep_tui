@@ -33,7 +33,8 @@ pub fn run_login() -> Result<(), io::Error> {
                 .direction(Direction::Vertical)
                 .constraints(
                     [
-                        Constraint::Percentage(40),
+                        Constraint::Percentage(30),
+                        Constraint::Percentage(10),
                         Constraint::Percentage(10),
                         Constraint::Percentage(10),
                         Constraint::Percentage(40),
@@ -42,6 +43,11 @@ pub fn run_login() -> Result<(), io::Error> {
                 )
                 .split(size);
 
+            let title_block = Paragraph::new("Login")
+                .block(Block::default().borders(Borders::ALL))
+                .style(Style::default().fg(Color::White));
+            f.render_widget(title_block, chunks[1]);
+
             let username_block = Paragraph::new(username.as_ref())
                 .block(Block::default().borders(Borders::ALL).title("Username"))
                 .style(Style::default().fg(if input_mode == InputMode::Username {
@@ -49,7 +55,7 @@ pub fn run_login() -> Result<(), io::Error> {
                 } else {
                     Color::White
                 }));
-            f.render_widget(username_block, chunks[1]);
+            f.render_widget(username_block, chunks[2]);
 
             let password_display: String = "*".repeat(password.len());
             let password_block = Paragraph::new(password_display.as_ref())
@@ -59,7 +65,7 @@ pub fn run_login() -> Result<(), io::Error> {
                 } else {
                     Color::White
                 }));
-            f.render_widget(password_block, chunks[2]);
+            f.render_widget(password_block, chunks[3]);
         })?;
 
         if let Event::Key(key) = event::read()? {
