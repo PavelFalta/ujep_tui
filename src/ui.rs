@@ -150,18 +150,18 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             };
 
             // --- Current time box in top-right ---
-            let time_str = Local::now().format("%H:%M:%S").to_string();
-            let time_block = Block::default().borders(Borders::ALL).title("Current Time");
-            let time_area = Rect {
-                x: size.width.saturating_sub(42),
-                y: 0,
-                width: 20,
-                height: 3,
-            };
-            let time_paragraph = Paragraph::new(time_str)
-                .block(time_block)
-                .alignment(Alignment::Center);
-            f.render_widget(time_paragraph, time_area);
+            // let time_str = Local::now().format("%H:%M:%S").to_string();
+            // let time_block = Block::default().borders(Borders::ALL).title("Current Time");
+            // let time_area = Rect {
+            //     x: size.width.saturating_sub(42),
+            //     y: 0,
+            //     width: 20,
+            //     height: 3,
+            // };
+            // let time_paragraph = Paragraph::new(time_str)
+            //     .block(time_block)
+            //     .alignment(Alignment::Center);
+            // f.render_widget(time_paragraph, time_area);
 
             // --- Status message with progress bar ---
             let (status_text, gauge_data) = build_status_msg(&final_displayed, now);
