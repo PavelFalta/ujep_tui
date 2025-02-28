@@ -5,9 +5,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-
+async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let body = json!({
         "device": {
             "osVersion": "18.1.1",
@@ -21,6 +19,59 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
         "password": env::var("PASSWORD").unwrap_or_default()
     });
 
+    let response = client.post("https://ujepice.ujep.cz/api/internal/login/stag")
+        .json(&body)
+        .headers(headers.clone())
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    Ok(response)
+}
+
+async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let response = client.get("https://ujepice.ujep.cz/api/profile/v2")
+        .headers(headers.clone())
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    Ok(response)
+}
+
+async fn fetch_timetable_data(client: &reqwest::Client, headers: &HeaderMap, stagid: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let response = client.get(&format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year=2024", stagid))
+        .headers(headers.clone())
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    Ok(response)
+}
+
+fn save_timetable_to_file(timetable: &serde_json::Value) -> Result<(), Box<dyn std::error::Error>> {
+    let mut timetable_with_datetime = timetable.clone();
+    let dt = chrono::Local::now().naive_local();
+    timetable_with_datetime["retrieved_at"] = serde_json::Value::String(dt.to_string());
+
+    let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
+    let mut path = cache_dir.join("ujep_timetable");
+    std::fs::create_dir_all(&path)?;
+
+    path.push("timetable.json");
+
+    let mut file = File::create(path)?;
+    file.write_all(serde_json::to_string_pretty(&timetable_with_datetime)?.as_bytes())?;
+
+    Ok(())
+}
+
+pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
+    let client = reqwest::Client::new();
+
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
     headers.insert(USER_AGENT, HeaderValue::from_static("Dalvik/2.1.0 (Linux; U; Android 7.1.2; Nexus 5X Build/N2G48C)"));
@@ -33,59 +84,23 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
     headers.insert("Client-version", HeaderValue::from_static("3.30.0"));
     headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
 
-    let response = client.post("https://ujepice.ujep.cz/api/internal/login/stag")
-        .json(&body)
-        .headers(headers.clone())
-        .send()
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
+    let login_response = login(&client, &headers).await?;
+    println!("{:#?}", login_response);
 
-    println!("{:#?}", response);
-
-    let access_token = response["data"]["accessToken"].as_str().unwrap_or_default();
+    let access_token = login_response["data"]["accessToken"].as_str().unwrap_or_default();
     headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
-    // print to console
 
-    let profile_response = client.get("https://ujepice.ujep.cz/api/profile/v2")
-        .headers(headers.clone())
-        .send()
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
-
+    let profile_response = fetch_profile(&client, &headers).await?;
     println!("{:#?}", profile_response);
 
     let stagid = profile_response["data"]["roles"]["student"][0]["roleId"].as_str().unwrap_or_default();
-
     println!("stagid: {}", stagid);
     println!("headers: {:#?}", headers);
 
-    let timetable_response = client.get(&format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year=2024", stagid))
-        .headers(headers)
-        .send()
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
-
+    let timetable_response = fetch_timetable_data(&client, &headers, stagid).await?;
     println!("{:#?}", timetable_response);
 
-    let mut timetable_with_datetime = timetable_response.clone();
-    let dt = chrono::Local::now().naive_local();
-    timetable_with_datetime["retrieved_at"] = serde_json::Value::String(dt.to_string());
-
-    // Get the cache directory
-    let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
-    // Create the directory if it doesn't exist
-    let mut path = cache_dir.join("ujep_timetable");
-    std::fs::create_dir_all(&path)?;
-
-    // Create the file path
-    path.push("timetable.json");
-
-    // Write the timetable to the file
-    let mut file = File::create(path)?;
-    file.write_all(serde_json::to_string_pretty(&timetable_with_datetime)?.as_bytes())?;
+    save_timetable_to_file(&timetable_response)?;
 
     Ok(())
 }
