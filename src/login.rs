@@ -12,8 +12,6 @@ use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::style::{Style, Color};
 use ratatui::text::{Spans, Span};
 use crossterm::event::{self, Event, KeyCode};
-use crossterm::terminal::{disable_raw_mode, LeaveAlternateScreen};
-use crossterm::execute;
 use std::io;
 
 pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,9 +26,12 @@ pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     let profile_response = fetch_profile_with_relogin(&client, &mut headers, &cache_path).await?;
 
     save_profile(&profile_response)?;
-
-    disable_raw_mode()?;
-    execute!(io::stdout(), LeaveAlternateScreen)?;
+    
+    // clean up terminal
+    let mut stdout = io::stdout();
+    crossterm::terminal::enable_raw_mode()?;
+    crossterm::execute!(stdout, crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
+    crossterm::terminal::disable_raw_mode()?;
 
     Ok(())
 }
