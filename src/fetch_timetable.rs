@@ -75,7 +75,15 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
     let file_path = cache_dir.join("timetable.json");
 
-    let mut file = File::create(file_path)?;
+    // Create the directory if it doesn't exist
+    let mut path = cache_dir.join("ujep_timetable");
+    std::fs::create_dir_all(&path)?;
+
+    // Create the file path
+    path.push("timetable.json");
+
+    // Write the timetable to the file
+    let mut file = File::create(path)?;
     file.write_all(serde_json::to_string_pretty(&timetable_with_datetime)?.as_bytes())?;
 
     Ok(())
