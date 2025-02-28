@@ -262,6 +262,20 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                 draw_ignore_overlay(f, size, app);
             }
 
+            if app.show_details {
+                if let Some(selected) = app.selected {
+                    if let Some(course) = final_displayed.get(selected) {
+                        let details_text = format!("{:#?}", course);
+                        let details_area = center_rect(50, 22, size);
+                        let details_block = Block::default().borders(Borders::ALL).title("Details");
+                        let details_paragraph = Paragraph::new(details_text)
+                            .block(details_block)
+                            .alignment(Alignment::Left);
+                        f.render_widget(details_paragraph, details_area);
+                    }
+                }
+            }
+
             // --- Render help overlay if active (with solid black background) ---
             if app.show_help {
                 let overlay_area = center_rect(50, 22, size);
