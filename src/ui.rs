@@ -532,7 +532,7 @@ r#"[Up/Down][j/k]: Move selection
                 // Main search mode handling.
                 if app.search_mode {
                     match key.code {
-                        KeyCode::Backspace => {
+                        KeyCode::Backspace | KeyCode::Esc => {
                             if let Some(ref mut query) = app.search_query {
                                 if query.is_empty() {
                                     app.search_mode = false;
@@ -558,7 +558,7 @@ r#"[Up/Down][j/k]: Move selection
                 // Ignore overlay handling.
                 if app.ignore_overlay_active {
                     match key.code {
-                        KeyCode::Backspace | KeyCode::Char('i') => {
+                        KeyCode::Backspace | KeyCode::Char('i') | KeyCode::Char('h') => {
                             app.ignore_overlay_active = false;
                         }
                         KeyCode::Up | KeyCode::Char('k') => {
