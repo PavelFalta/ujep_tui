@@ -607,11 +607,19 @@ r#"[Up/Down][j/k]: Move selection
                         }
                         app.show_details = true;
                     }
+                    KeyCode::Char('l') => {
+                        app.show_details = true;
+                    }
                     KeyCode::Char('t') => {
                         app.show_clock = !app.show_clock;
                     }
                     KeyCode::Char('h') => {
-                        app.show_help = true;
+                        if app.show_details {
+                            app.show_details = false;
+                        }
+                        else {
+                            app.show_help = true;                    
+                        }
                     }
                     KeyCode::Char('i') => {
                         app.ignore_overlay_active = !app.ignore_overlay_active;
