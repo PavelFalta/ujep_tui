@@ -46,6 +46,9 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
 
     let access_token = response["data"]["accessToken"].as_str().unwrap_or_default();
     headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {}", access_token))?);
+    // print to console
+    println!("Access token: {}", access_token);
+    println!("Headers: {:#?}", headers);
 
     let profile_response = client.get("https://ujepice.ujep.cz/api/profile/v2")
         .headers(headers.clone())
