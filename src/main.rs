@@ -97,11 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Err(e) => {
             // Check if error is a network error
-            if e.to_string().contains("offline mode") {
-                offline_fallback()?;
-                false
-            } 
-            else if e.to_string().contains("failed to lookup address") || 
+            if e.to_string().contains("failed to lookup address") || 
             e.to_string().contains("dns error") 
             {
                 disable_raw_mode()?;

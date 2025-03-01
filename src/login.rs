@@ -149,13 +149,6 @@ async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_js
     //println!("Login response: {:#?}", response);
     Ok(response)
 }
-#[derive(PartialEq)]
-enum InputMode {
-    Username,
-    Password,
-    Offline,
-}
-
 fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Error>> {
     let mut stdout = io::stdout();
     crossterm::terminal::enable_raw_mode()?;
@@ -179,12 +172,11 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Percentage(35),
+                    Constraint::Percentage(40),
                     Constraint::Length(1),
                     Constraint::Length(3),
                     Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Percentage(35),
+                    Constraint::Percentage(40),
                 ].as_ref())
                 .split(size);
 
@@ -202,36 +194,26 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 .block(Block::default().borders(Borders::ALL).title("Password"))
                 .style(Style::default().fg(if input_mode == InputMode::Password && !disable_input { Color::Yellow } else { Color::White }));
             f.render_widget(password_block, chunks[3]);
-            
-            let offline_block = Paragraph::new("Press Enter to use offline mode")
-                .block(Block::default().borders(Borders::ALL).title("Offline Mode"))
-                .style(Style::default().fg(if input_mode == InputMode::Offline && !disable_input { Color::Yellow } else { Color::White }));
-            f.render_widget(offline_block, chunks[4]);
         })?;
 
         if !disable_input {
             if let Event::Key(key) = event::read()? {
                 match input_mode {
                     InputMode::Username => match key.code {
-                        KeyCode::Enter => input_mode = InputMode::Password,
-                        KeyCode::Tab => input_mode = InputMode::Password,
+                        KeyCode::Enter | KeyCode::Tab => input_mode = InputMode::Password,
                         KeyCode::Char(c) => username.push(c),
                         KeyCode::Backspace => { username.pop(); },
                         _ => {}
                     },
                     InputMode::Password => match key.code {
-                        KeyCode::Enter => break,
-                        KeyCode::Tab => input_mode = InputMode::Offline,
-                        KeyCode::Char(c) => password.push(c),
-                        KeyCode::Backspace => { password.pop(); },
-                        _ => {}
-                    },
-                    InputMode::Offline => match key.code {
                         KeyCode::Enter => {
-                            crossterm::terminal::disable_raw_mode()?;
-                            return Err("dns error: Using offline mode".into());
+                            // label = "Logging in...".to_string();
+                            // disable_input = true;
+                            break;
                         },
                         KeyCode::Tab => input_mode = InputMode::Username,
+                        KeyCode::Char(c) => password.push(c),
+                        KeyCode::Backspace => { password.pop(); },
                         _ => {}
                     },
                 }
@@ -243,6 +225,12 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     Ok((username, password))
 }
 
+
+#[derive(PartialEq)]
+enum InputMode {
+    Username,
+    Password,
+}
 
 async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     //println!("Sending profile request...");
