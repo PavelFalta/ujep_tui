@@ -407,8 +407,57 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             if app.show_clock {
                 f.render_widget(Clear, size);
                 let time_str = Local::now().format("%H:%M:%S").to_string();
+                let ascii_digits = vec![
+                    // 0
+                    "  0000  \n 00  00 \n00    00\n00    00\n00    00\n 00  00 \n  0000  ",
+                    // 1
+                    "   11   \n  111   \n   11   \n   11   \n   11   \n   11   \n  1111  ",
+                    // 2
+                    "  2222  \n 22  22 \n     22 \n   222  \n  22    \n  22    \n 222222 ",
+                    // 3
+                    "  3333  \n33   33 \n     33 \n   333  \n     33 \n33   33 \n  3333  ",
+                    // 4
+                    "   44   \n  444   \n 44 4   \n44  4   \n4444444 \n    4   \n    4   ",
+                    // 5
+                    "5555555 \n55      \n55555   \n     55 \n     55 \n55   55 \n 5555   ",
+                    // 6
+                    "  6666  \n 66     \n66      \n666666  \n66   66 \n66   66 \n  6666  ",
+                    // 7
+                    "7777777 \n     77 \n    77  \n   77   \n  77    \n 77     \n 77     ",
+                    // 8
+                    "  8888  \n88   88 \n88   88 \n  8888  \n88   88 \n88   88 \n  8888  ",
+                    // 9
+                    "  9999  \n99   99 \n99   99 \n  99999 \n     99 \n    99  \n  999   ",
+                    // colon
+                    "        \n   ::   \n   ::   \n        \n   ::   \n   ::   \n        ",
+                ];
+
+                let mut ascii_time = String::new();
+                for line in 0..7 {
+                    for ch in time_str.chars() {
+                        let digit = match ch {
+                            '0' => &ascii_digits[0],
+                            '1' => &ascii_digits[1],
+                            '2' => &ascii_digits[2],
+                            '3' => &ascii_digits[3],
+                            '4' => &ascii_digits[4],
+                            '5' => &ascii_digits[5],
+                            '6' => &ascii_digits[6],
+                            '7' => &ascii_digits[7],
+                            '8' => &ascii_digits[8],
+                            '9' => &ascii_digits[9],
+                            ':' => &ascii_digits[10],
+                            _ => "",
+                        };
+                        let digit_lines: Vec<&str> = digit.split('\n').collect();
+                        ascii_time.push_str(digit_lines[line]);
+                        ascii_time.push(' ');
+                    }
+                    ascii_time.push('\n');
+                }
+
                 let time_block = Block::default().borders(Borders::ALL).title("Current Time");
-                let time_paragraph = Paragraph::new(time_str)
+                let time_paragraph = Paragraph::new(ascii_time)
                     .block(time_block)
                     .alignment(Alignment::Center)
                     .style(
@@ -419,9 +468,9 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                     );
                 let centered_area = Rect {
                     x: 0,
-                    y: size.height / 2 - 1,
+                    y: size.height / 2 - 4,
                     width: size.width,
-                    height: 3,
+                    height: 9,
                 };
                 f.render_widget(time_paragraph, centered_area);
             }

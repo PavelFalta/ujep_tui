@@ -23,7 +23,7 @@ fn save_timetable_to_file(timetable: &serde_json::Value) -> Result<(), Box<dyn s
     timetable_with_datetime["retrieved_at"] = serde_json::Value::String(dt.to_string());
 
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
-    let mut path = cache_dir.join("ujep_timetable");
+    let mut path = cache_dir.join("ujep_tui");
     std::fs::create_dir_all(&path)?;
 
     path.push("timetable.json");
@@ -52,7 +52,7 @@ fn build_headers(bearer_token: &str) -> HeaderMap {
 
 fn get_cache_path(file_name: &str) -> PathBuf {
     let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-    cache_path.push("ujep_timetable");
+    cache_path.push("ujep_tui");
     std::fs::create_dir_all(&cache_path).unwrap();
     cache_path.push(file_name);
 

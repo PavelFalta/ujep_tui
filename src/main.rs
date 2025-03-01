@@ -29,7 +29,7 @@ struct IgnoredIds {
 
 fn load_ignored_ids() -> HashSet<u32> {
     if let Some(mut path) = cache_dir() {
-        path.push("ujep_timetable");
+        path.push("ujep_tui");
         path.push("ignored_ids.json");
         if let Ok(data) = fs::read_to_string(&path) {
             if let Ok(ignored_ids) = serde_json::from_str::<IgnoredIds>(&data) {
@@ -42,7 +42,7 @@ fn load_ignored_ids() -> HashSet<u32> {
 
 fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
     if let Some(mut path) = cache_dir() {
-        path.push("ujep_timetable");
+        path.push("ujep_tui");
         fs::create_dir_all(&path).unwrap();
         path.push("ignored_ids.json");
         let ignored_ids = IgnoredIds {
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         // Read and parse the JSON file.
         let mut path = cache_dir().unwrap();
-        path.push("ujep_timetable");
+        path.push("ujep_tui");
         path.push("timetable.json");
         let json_data = fs::read_to_string(&path)?;
         let replacements = [

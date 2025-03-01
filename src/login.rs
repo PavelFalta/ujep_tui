@@ -56,7 +56,7 @@ fn create_headers() -> Result<HeaderMap, InvalidHeaderValue> {
 
 fn get_cache_path(filename: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let mut cache_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-    cache_path.push("ujep_timetable");
+    cache_path.push("ujep_tui");
     std::fs::create_dir_all(&cache_path)?;
     cache_path.push(filename);
     Ok(cache_path)
@@ -112,7 +112,7 @@ async fn fetch_profile_with_relogin(client: &reqwest::Client, headers: &mut Head
 
 fn save_profile(profile_response: &serde_json::Value) -> Result<(), Box<dyn std::error::Error>> {
     let mut profile_path = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-    profile_path.push("ujep_timetable");
+    profile_path.push("ujep_tui");
     profile_path.push("profile.json");
     std::fs::create_dir_all(profile_path.parent().unwrap())?;
     let mut file = File::create(profile_path)?;
