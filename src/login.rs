@@ -4,13 +4,27 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use reqwest::header::InvalidHeaderValue;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::layout::{Layout, Constraint, Direction};
-use ratatui::style::{Style, Color};
-use crossterm::event::{self, Event, KeyCode};
+
 use std::io;
+
+use crossterm::{
+    event::{self, Event, KeyCode},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
+use ratatui::{
+    backend::CrosstermBackend,
+    layout::{Alignment, Constraint, Direction, Layout},
+    style::{Color, Style},
+    widgets::{Block, Borders, Paragraph, Clear},
+    Terminal,
+};
+
+#[derive(Debug, PartialEq)]
+enum InputMode {
+    Username,
+    Password,
+    OfflineMode,
+}
 
 pub async fn run_login() -> Result<(), Box<dyn std::error::Error>> {
     let client = create_http_client();
@@ -150,108 +164,257 @@ async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_js
     Ok(response)
 }
 fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Error>> {
-    let mut stdout = io::stdout();
-    crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(stdout, crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
+    let stdout = io::stdout();
+    enable_raw_mode()?;
+    // execute!(stdout, Clear(ClearType::All))?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
     let mut username = String::new();
     let mut password = String::new();
     let mut input_mode = InputMode::Username;
-    let label = "Input STAG credentials".to_string();
-    let label_len = label.len() as u16;
-    let terminal_width = terminal.size()?.width;
-    let padding = (terminal_width - label_len) / 2;
-    let label = format!("{:padding$}{}", "", label, padding = padding as usize);
-    let disable_input = false;
 
+    // Label for the top
+    let label = "Input STAG credentials".to_string();
+
+    // Check if offline mode is possible
     let offline_mode_available = get_cache_path("timetable.json")?.exists();
-    let mut offline_mode_selected = false;
 
     loop {
         terminal.draw(|f| {
             let size = f.size();
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Percentage(30),
-                    Constraint::Length(1),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Percentage(30),
-                ].as_ref())
-                .split(size);
-
-            let label_block = Paragraph::new(label.as_ref())
-                .block(Block::default().borders(Borders::NONE));
-            f.render_widget(label_block, chunks[1]);
-
-            let username_block = Paragraph::new(username.as_ref())
-                .block(Block::default().borders(Borders::ALL).title("Username"))
-                .style(Style::default().fg(if input_mode == InputMode::Username && !disable_input { Color::Yellow } else { Color::White }));
-            f.render_widget(username_block, chunks[2]);
-
+            if size.width < 91 || size.height < 18 {
+                let warning_text = format!(
+                    "Terminal size too small.\n\
+                    Minimum required size is 98x19.\n\
+                    Current size is {}x{}.",
+                    size.width, size.height
+                );
+                let warning_paragraph = Paragraph::new(warning_text)
+                    .block(Block::default().borders(Borders::ALL).title("Warning"))
+                    .alignment(Alignment::Center);
+                f.render_widget(Clear, size);
+                f.render_widget(warning_paragraph, size);
+                return 
+            }
+            let total_height = size.height;
+        
+            //
+            // 1) We want:
+            //    - A 12-line region in the vertical center for the label + login form.
+            //    - A 3-line region pinned at the bottom for the "Offline Mode" button.
+            //    - Everything else is divided between top and bottom as vertical "spacers."
+            //
+            //    So total needed = 12 (center) + 3 (bottom) = 15 lines.
+            //    If the terminal is smaller than 15 lines, TUI will squash or truncate something.
+            //
+        
+            let leftover_vertical = total_height.saturating_sub(15);
+            let top_space = leftover_vertical / 2;
+            let bottom_space = leftover_vertical - top_space;
+        
+            // Vertical layout: [ top_space | 12-line center | bottom_space | 3-line pinned row ]
+            let vertical_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(top_space.into()),
+                Constraint::Length(12),       // center block
+                Constraint::Length(bottom_space.into()),
+                Constraint::Length(3),        // pinned bottom row
+            ])
+            .split(size);
+        
+            let center_rect = vertical_layout[1];
+            let bottom_rect = vertical_layout[3];
+        
+            //
+            // 2) Horizontally, we want a 40-column region in the exact middle for the login form.
+            //    leftover_width = total_width - 40. Then split that leftover equally into left_space/right_space.
+            //    If leftover is odd, one side will get 1 more column than the other (that’s normal in text UIs).
+            //
+            let leftover_width = center_rect.width.saturating_sub(40);
+            let left_space = leftover_width / 2;
+            let right_space = leftover_width - left_space;
+        
+            // Horizontal layout: [ left_space | 40 columns for login | right_space ]
+            let horizontal_layout = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Length(left_space.into()),
+                Constraint::Length(40),
+                Constraint::Length(right_space.into()),
+            ])
+            .split(center_rect);
+        
+            let login_area = horizontal_layout[1];
+        
+            //
+            // 3) Inside that 12×40 login area, we split vertically into:
+            //    - 2 lines for the label
+            //    - 1 line spacer
+            //    - 9 lines for the actual login frame
+            //
+            let center_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(2),  // label
+                Constraint::Length(1),  // small spacer
+                Constraint::Length(9), // login frame
+            ])
+            .split(login_area);
+        
+            //
+            // 4) Render the label in the top chunk (2 lines, centered text).
+            //
+            let label_paragraph = Paragraph::new(label.as_str()).alignment(Alignment::Center);
+            f.render_widget(label_paragraph, center_layout[0]);
+        
+            //
+            // 5) The login frame is 9 lines tall. We'll put a margin(1) inside it,
+            //    leaving 7 lines for the username/password/hint rows (3+3+1=7).
+            //
+            let login_frame = Block::default()
+            .borders(Borders::ALL)
+            .title("Login");
+            f.render_widget(login_frame, center_layout[2]);
+        
+            let login_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3), // username row
+                Constraint::Length(3), // password row
+                Constraint::Length(1), // hint row
+            ])
+            .margin(1)
+            .split(center_layout[2]);
+        
+            //
+            // 6) Username block
+            //
+            let username_block = Paragraph::new(username.as_str())
+            .block(Block::default().borders(Borders::ALL).title("Username"))
+            .style(
+                Style::default().fg(if input_mode == InputMode::Username {
+                Color::Yellow
+                } else {
+                Color::White
+                }),
+            );
+            f.render_widget(username_block, login_chunks[0]);
+        
+            //
+            // 7) Password block (mask the input with '*')
+            //
             let password_display: String = password.chars().map(|_| '*').collect();
-            let password_block = Paragraph::new(password_display.as_ref())
-                .block(Block::default().borders(Borders::ALL).title("Password"))
-                .style(Style::default().fg(if input_mode == InputMode::Password && !disable_input { Color::Yellow } else { Color::White }));
-            f.render_widget(password_block, chunks[3]);
-
+            let password_block = Paragraph::new(password_display)
+            .block(Block::default().borders(Borders::ALL).title("Password"))
+            .style(
+                Style::default().fg(if input_mode == InputMode::Password {
+                Color::Yellow
+                } else {
+                Color::White
+                }),
+            );
+            f.render_widget(password_block, login_chunks[1]);
+        
+            //
+            // 8) Hint row (centered)
+            //
+            let login_hint = "Press Enter to Login";
+            let hint_paragraph = Paragraph::new(login_hint)
+            .alignment(Alignment::Center)
+            .style(
+                Style::default().fg(if input_mode == InputMode::Password {
+                Color::Yellow
+                } else {
+                Color::White
+                }),
+            );
+            f.render_widget(hint_paragraph, login_chunks[2]);
+        
+            //
+            // 9) Finally, the bottom 3-line row for Offline Mode, pinned at bottom right.
+            //
             if offline_mode_available {
-                let offline_mode_block = Paragraph::new("Offline Mode")
-                    .block(Block::default().borders(Borders::ALL))
-                    .style(Style::default().fg(if input_mode == InputMode::OfflineMode && !disable_input { Color::Yellow } else { Color::White }));
-                f.render_widget(offline_mode_block, chunks[4]);
+            let bottom_layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                Constraint::Min(0),
+                Constraint::Length(14),
+                ])
+                .split(bottom_rect);
+        
+            let offline_label = Paragraph::new("Offline Mode")
+                .block(Block::default().borders(Borders::ALL))
+                .style(
+                Style::default().fg(if input_mode == InputMode::OfflineMode {
+                    Color::Yellow
+                } else {
+                    Color::White
+                }),
+                );
+            f.render_widget(offline_label, bottom_layout[1]);
             }
         })?;
+        
+        
+        
+        
 
-        if !disable_input {
-            if let Event::Key(key) = event::read()? {
-                match input_mode {
-                    InputMode::Username => match key.code {
-                        KeyCode::Enter | KeyCode::Tab => input_mode = if offline_mode_available { InputMode::Password } else { InputMode::Password },
-                        KeyCode::Char(c) => username.push(c),
-                        KeyCode::Backspace => { username.pop(); },
-                        _ => {}
-                    },
-                    InputMode::Password => match key.code {
-                        KeyCode::Enter => {
-                            if offline_mode_available {
-                                input_mode = InputMode::OfflineMode;
-                            } else {
-                                break;
-                            }
-                        },
-                        KeyCode::Tab => input_mode = if offline_mode_available { InputMode::OfflineMode } else { InputMode::Username },
-                        KeyCode::Char(c) => password.push(c),
-                        KeyCode::Backspace => { password.pop(); },
-                        _ => {}
-                    },
-                    InputMode::OfflineMode => match key.code {
-                        KeyCode::Enter => {
-                            return Ok((String::new(), String::new())); // Return empty credentials for offline mode
-                        },
-                        KeyCode::Tab => input_mode = InputMode::Username,
-                        _ => {}
-                    },
-                }
+        // Handle keyboard input
+        if let Event::Key(key) = event::read()? {
+            match input_mode {
+                InputMode::Username => match key.code {
+                    KeyCode::Enter | KeyCode::Tab => {
+                        // Move to Password (or OfflineMode if you prefer).
+                        // But if there's no offline mode, we only go to Password.
+                        if offline_mode_available {
+                            input_mode = InputMode::Password;
+                        } else {
+                            input_mode = InputMode::Password;
+                        }
+                    }
+                    KeyCode::Char(c) => username.push(c),
+                    KeyCode::Backspace => {
+                        username.pop();
+                    }
+                    _ => {}
+                },
+                InputMode::Password => match key.code {
+                    KeyCode::Enter => {
+                        // Done typing - try to login
+                        disable_raw_mode()?;
+                        return Ok((username, password));
+                    }
+                    KeyCode::Tab => {
+                        if offline_mode_available {
+                            input_mode = InputMode::OfflineMode;
+                        } else {
+                            input_mode = InputMode::Username;
+                        }
+                    }
+                    KeyCode::Char(c) => password.push(c),
+                    KeyCode::Backspace => {
+                        password.pop();
+                    }
+                    _ => {}
+                },
+                InputMode::OfflineMode => match key.code {
+                    KeyCode::Enter => {
+                        // If user selects offline mode, let's return an error or handle accordingly
+                        disable_raw_mode()?;
+                        return Err("offline mode".into());
+                    }
+                    KeyCode::Tab => {
+                        input_mode = InputMode::Username;
+                    }
+                    _ => {}
+                },
             }
         }
     }
-
-    crossterm::terminal::disable_raw_mode()?;
-    Ok((username, password))
 }
 
-
-#[derive(PartialEq)]
-enum InputMode {
-    Username,
-    Password,
-    OfflineMode,
-}
 
 async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     //println!("Sending profile request...");

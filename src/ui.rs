@@ -188,6 +188,20 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
         terminal.draw(|f| {
             let size = f.size();
+            if size.width < 91 || size.height < 18 {
+                let warning_text = format!(
+                    "Terminal size too small.\n\
+                    Minimum required size is 98x19.\n\
+                    Current size is {}x{}.",
+                    size.width, size.height
+                );
+                let warning_paragraph = Paragraph::new(warning_text)
+                    .block(Block::default().borders(Borders::ALL).title("Warning"))
+                    .alignment(Alignment::Center);
+                f.render_widget(Clear, size);
+                f.render_widget(warning_paragraph, size);
+                return 
+            }
 
             let main_chunks = if app.search_mode {
                 Layout::default()
@@ -355,6 +369,22 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             f.render_widget(Clear, ignored_count_area);
             f.render_widget(ignored_count_paragraph, ignored_count_area);
 
+            if app.offline_mode {
+                let offline_label = "Offline";
+                let offline_area = Rect {
+                    x: 0,
+                    y: size.height.saturating_sub(3),
+                    width: offline_label.len() as u16 + 2,
+                    height: 3,
+                };
+                let offline_paragraph = Paragraph::new(offline_label)
+                    .block(Block::default().borders(Borders::ALL))
+                    .alignment(Alignment::Center)
+                    .style(Style::default().fg(Color::Yellow));
+                f.render_widget(Clear, offline_area);
+                f.render_widget(offline_paragraph, offline_area);
+            }
+
             
             let time_str = Local::now().format("%H:%M:%S").to_string();
             let time_block = Block::default().borders(Borders::ALL).title("Time");
@@ -507,7 +537,14 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             course.statut.as_deref().unwrap_or("N/A"),
                             course.teachingTeacherStagId.map_or("N/A".to_string(), |v| v.to_string()),
                         );
-                        let details_area = center_rect(50, 50, size);
+                        let lines: u16 = details_text.lines().count() as u16;
+                        let width: u16 = details_text.lines().map(|line| line.len()).max().unwrap_or(0) as u16;
+
+                        let details_area = if size.height < lines * 3 + 4 {
+                            center_rect(width + 4, 65, size)
+                        } else {
+                            center_rect(width + 4, lines * 3, size)
+                        };
                         let details_block = Block::default().borders(Borders::ALL).title("Details");
                         let details_paragraph = Paragraph::new(details_text)
                             .block(details_block)
@@ -544,11 +581,6 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 
             
             if app.show_help {
-                let overlay_area = center_rect(50, 27, size);
-                f.render_widget(Clear, overlay_area);
-                let bg_block = Block::default().style(Style::default().bg(Color::Black));
-                f.render_widget(bg_block, overlay_area);
-
                 let help_text = r#"[Home/End]: Jump to first/last item
 [Up/Down][j/k]: Move selection
 [Enter][l]: Show details
@@ -559,6 +591,18 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
 [t]: Toggle clock
 [h]: Toggle help
 [q]: Quit"#;
+
+                let s = Rect {
+                    x: (size.width / 2).saturating_sub(25),
+                    y: (size.height.saturating_sub(15)) / 2,
+                    width: 50,
+                    height: 15,
+                };
+
+                let overlay_area = center_rect(80, 80, s);
+                f.render_widget(Clear, overlay_area);
+                let bg_block = Block::default().style(Style::default().bg(Color::Black));
+                f.render_widget(bg_block, overlay_area);
 
                 let overlay = Paragraph::new(help_text)
                     .block(
@@ -736,27 +780,34 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             .or(app.last_selected)
                             .or(app.upcoming_index())
                             .unwrap_or(0);
-
+                    
                         let max_index = if !filtered_displayed.is_empty() {
                             filtered_displayed.len().saturating_sub(1)
                         } else {
                             displayed.len().saturating_sub(1)
                         };
-
+                    
                         let new_selected = cmp::min(current + 1, max_index);
                         app.selected = Some(new_selected);
                         app.last_selected = Some(new_selected);
-
-                        let visible_count = cmp::max(
-                            (terminal.size()?.height as usize).saturating_sub(6),
-                            1,
-                        );
-
-                        if new_selected >= app.scroll_offset + visible_count {
-                            app.scroll_offset =
-                                new_selected.saturating_sub(visible_count).saturating_add(1);
-                        } else if new_selected < app.scroll_offset {
-                            app.scroll_offset = new_selected;
+                    
+                        // Total items in the list:
+                        let total = if !filtered_displayed.is_empty() {
+                            filtered_displayed.len()
+                        } else {
+                            displayed.len()
+                        };
+                    
+                        // Calculate how many rows are visible.
+                        // Adjust the constant (here 6) based on your layout (e.g. borders, headers, etc.)
+                        let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(6), 1);
+                        let half_visible = visible_count / 2;
+                    
+                        // Set the scroll offset so the new_selected item stays centered when possible.
+                        if total > visible_count && new_selected >= half_visible {
+                            app.scroll_offset = cmp::min(new_selected - half_visible, total - visible_count);
+                        } else {
+                            app.scroll_offset = 0;
                         }
                     }
                     KeyCode::Up | KeyCode::Char('k') => {
@@ -765,23 +816,27 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             .or(app.last_selected)
                             .or(app.upcoming_index())
                             .unwrap_or(0);
-
+                    
                         let new_selected = current.saturating_sub(1);
                         app.selected = Some(new_selected);
                         app.last_selected = Some(new_selected);
-
-                        let visible_count = cmp::max(
-                            (terminal.size()?.height as usize).saturating_sub(3),
-                            1,
-                        );
-
-                        if new_selected < app.scroll_offset {
-                            app.scroll_offset = new_selected;
-                        } else if new_selected >= app.scroll_offset + visible_count {
-                            app.scroll_offset =
-                                new_selected.saturating_sub(visible_count).saturating_add(1);
+                    
+                        let total = if !filtered_displayed.is_empty() {
+                            filtered_displayed.len()
+                        } else {
+                            displayed.len()
+                        };
+                    
+                        let visible_count = cmp::max((terminal.size()?.height as usize).saturating_sub(6), 1);
+                        let half_visible = visible_count / 2;
+                    
+                        if total > visible_count && new_selected >= half_visible {
+                            app.scroll_offset = cmp::min(new_selected - half_visible, total - visible_count);
+                        } else {
+                            app.scroll_offset = 0;
                         }
                     }
+                    
                     KeyCode::Home => {
                         app.selected = Some(0);
                         app.last_selected = Some(0);
@@ -1036,7 +1091,7 @@ fn draw_ignore_overlay<B: Backend>(f: &mut ratatui::Frame<B>, area: Rect, app: &
         .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
         .split(overlay_area);
 
-    let header = "Ignore Menu (Enter to toggle, Backspace or [i] to close)";
+    let header = "Ignore Menu (Enter to toggle)";
     let header_paragraph = Paragraph::new(header)
         .block(Block::default().borders(Borders::ALL).title("Ignore Classes"))
         .alignment(Alignment::Left);

@@ -97,7 +97,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Err(e) => {
             // Check if error is a network error
-            if e.to_string().contains("failed to lookup address") || 
+            if e.to_string().contains("offline mode") {
+                offline_fallback()?;
+                false
+            } 
+            else if e.to_string().contains("failed to lookup address") || 
             e.to_string().contains("dns error") 
             {
                 disable_raw_mode()?;
@@ -117,6 +121,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
+
+    let mut last: Option<bool> = None;
 
     loop {
         // Read and parse the JSON file.
@@ -152,7 +158,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Create our app and sort courses by start time.
         let mut app = App::new(courses, Some(ignored_ids));
         app.last_update = Some(dt);
-        app.offline_mode = !online_mode;
+
+        if last.is_none()
+        {
+            app.offline_mode = !online_mode;
+        }
+        else
+        {
+            app.offline_mode = last.unwrap_or(false)
+        }
+
         app.sort_courses_by_start();
 
         // Scroll so that the upcoming course is near the top.
@@ -183,12 +198,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if err.kind() == io::ErrorKind::Interrupted && err.to_string() == "forced refresh" {
                 display_loading_widget()?;
                 match fetch_timetable().await {
-                    Ok(_) => app.offline_mode = false,
+                    Ok(_) => last = Some(false),
                     Err(e) => {
                         if e.to_string().contains("failed to lookup address") || 
                            e.to_string().contains("dns error") {
                             offline_fallback()?;
-                            app.offline_mode = true;
+                            last = Some(true);
                         } else {
                             return Err(e);
                         }
