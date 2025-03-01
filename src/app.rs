@@ -29,6 +29,7 @@ pub struct App<'a> {
 
     pub show_clock: bool,
     pub last_update: Option<NaiveDateTime>,
+    pub offline_mode: bool
 }
 
 impl<'a> App<'a> {
@@ -63,6 +64,7 @@ impl<'a> App<'a> {
             search_query: None,
             show_clock: false,
             last_update: None,
+            offline_mode: false
         }
     }
 

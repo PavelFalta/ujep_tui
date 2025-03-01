@@ -53,6 +53,18 @@ fn save_ignored_ids(ignored_ids: &HashSet<u32>) {
         }
     }
 }
+fn offline_fallback() -> Result<(), Box<dyn std::error::Error>> {
+    // Check if timetable exists in cache
+    let mut path = cache_dir().unwrap();
+    path.push("ujep_tui");
+    path.push("timetable.json");
+    
+    if path.exists() {
+        Ok(()) // File exists, we can continue with cached data
+    } else {
+        Err("No cached timetable available while offline".into())
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,8 +78,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     display_loading_widget()?;
     
-    run_login().await?;
-    fetch_timetable().await?;
+    // Try to login and fetch timetable, fallback to offline mode if network errors occur
+    let online_mode = match run_login().await {
+        Ok(_) => {
+            match fetch_timetable().await {
+                Ok(_) => true,
+                Err(e) => {
+                    // Check if error is a network error
+                    if e.to_string().contains("failed to lookup address") || 
+                       e.to_string().contains("dns error") {
+                        offline_fallback()?;
+                        false
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+        },
+        Err(e) => {
+            // Check if error is a network error
+            if e.to_string().contains("failed to lookup address") || 
+               e.to_string().contains("dns error") {
+                offline_fallback()?;
+                false
+            } else {
+                return Err(e);
+            }
+        }
+    };
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -107,6 +145,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Create our app and sort courses by start time.
         let mut app = App::new(courses, Some(ignored_ids));
         app.last_update = Some(dt);
+        app.offline_mode = !online_mode;
         app.sort_courses_by_start();
 
         // Scroll so that the upcoming course is near the top.
@@ -136,7 +175,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Err(err) = res {
             if err.kind() == io::ErrorKind::Interrupted && err.to_string() == "forced refresh" {
                 display_loading_widget()?;
-                fetch_timetable().await?;
+                match fetch_timetable().await {
+                    Ok(_) => app.offline_mode = false,
+                    Err(e) => {
+                        if e.to_string().contains("failed to lookup address") || 
+                           e.to_string().contains("dns error") {
+                            offline_fallback()?;
+                            app.offline_mode = true;
+                        } else {
+                            return Err(e);
+                        }
+                    }
+                }
                 disable_raw_mode()?;
                 execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
                 terminal.show_cursor()?;
