@@ -166,17 +166,21 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     let label = format!("{:padding$}{}", "", label, padding = padding as usize);
     let disable_input = false;
 
+    let offline_mode_available = get_cache_path("timetable.json")?.exists();
+    let mut offline_mode_selected = false;
+
     loop {
         terminal.draw(|f| {
             let size = f.size();
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Percentage(40),
+                    Constraint::Percentage(30),
                     Constraint::Length(1),
                     Constraint::Length(3),
                     Constraint::Length(3),
-                    Constraint::Percentage(40),
+                    Constraint::Length(3),
+                    Constraint::Percentage(30),
                 ].as_ref())
                 .split(size);
 
@@ -194,26 +198,42 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 .block(Block::default().borders(Borders::ALL).title("Password"))
                 .style(Style::default().fg(if input_mode == InputMode::Password && !disable_input { Color::Yellow } else { Color::White }));
             f.render_widget(password_block, chunks[3]);
+
+            if offline_mode_available {
+                let offline_mode_block = Paragraph::new("Offline Mode")
+                    .block(Block::default().borders(Borders::ALL))
+                    .style(Style::default().fg(if input_mode == InputMode::OfflineMode && !disable_input { Color::Yellow } else { Color::White }));
+                f.render_widget(offline_mode_block, chunks[4]);
+            }
         })?;
 
         if !disable_input {
             if let Event::Key(key) = event::read()? {
                 match input_mode {
                     InputMode::Username => match key.code {
-                        KeyCode::Enter | KeyCode::Tab => input_mode = InputMode::Password,
+                        KeyCode::Enter | KeyCode::Tab => input_mode = if offline_mode_available { InputMode::Password } else { InputMode::Password },
                         KeyCode::Char(c) => username.push(c),
                         KeyCode::Backspace => { username.pop(); },
                         _ => {}
                     },
                     InputMode::Password => match key.code {
                         KeyCode::Enter => {
-                            // label = "Logging in...".to_string();
-                            // disable_input = true;
-                            break;
+                            if offline_mode_available {
+                                input_mode = InputMode::OfflineMode;
+                            } else {
+                                break;
+                            }
                         },
-                        KeyCode::Tab => input_mode = InputMode::Username,
+                        KeyCode::Tab => input_mode = if offline_mode_available { InputMode::OfflineMode } else { InputMode::Username },
                         KeyCode::Char(c) => password.push(c),
                         KeyCode::Backspace => { password.pop(); },
+                        _ => {}
+                    },
+                    InputMode::OfflineMode => match key.code {
+                        KeyCode::Enter => {
+                            return Ok((String::new(), String::new())); // Return empty credentials for offline mode
+                        },
+                        KeyCode::Tab => input_mode = InputMode::Username,
                         _ => {}
                     },
                 }
@@ -230,6 +250,7 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
 enum InputMode {
     Username,
     Password,
+    OfflineMode,
 }
 
 async fn fetch_profile(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
