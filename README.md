@@ -4,7 +4,7 @@
 
 ## Overview 
 - The tui is designed to fetch and display your timetable data from UJEP's API.
-- Login using your stag creds and watch it provide a user-friendly interface to browse/filter classes.
+- Login using your stag creds and watch it provide a rice-friendly interface to browse/filter classes.
 - Written in Rust.
 
 You have two options to install the client:
