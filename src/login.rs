@@ -174,10 +174,8 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     let mut password = String::new();
     let mut input_mode = InputMode::Username;
 
-    
     let label = "Input STAG credentials".to_string();
 
-    
     let offline_mode_available = get_cache_path("timetable.json")?.exists();
 
     loop {
@@ -199,21 +197,11 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             }
             let total_height = size.height;
         
-            
-            
-            
-            
-            
-            
-            
-            
-            
         
             let leftover_vertical = total_height.saturating_sub(15);
             let top_space = leftover_vertical / 2;
             let bottom_space = leftover_vertical - top_space;
         
-            
             let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -227,11 +215,6 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             let center_rect = vertical_layout[1];
             let bottom_rect = vertical_layout[3];
         
-            
-            
-            
-            
-            
             let leftover_width = center_rect.width.saturating_sub(40);
             let left_space = leftover_width / 2;
             let right_space = leftover_width - left_space;
@@ -247,12 +230,6 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             .split(center_rect);
         
             let login_area = horizontal_layout[1];
-        
-            
-            
-            
-            
-            
             
             let center_layout = Layout::default()
             .direction(Direction::Vertical)
@@ -262,17 +239,10 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 Constraint::Length(9), 
             ])
             .split(login_area);
-        
-            
-            
             
             let label_paragraph = Paragraph::new(label.as_str()).alignment(Alignment::Center);
             f.render_widget(label_paragraph, center_layout[0]);
         
-            
-            
-            
-            
             let login_frame = Block::default()
             .borders(Borders::ALL)
             .title("Login");
@@ -287,9 +257,6 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             ])
             .margin(1)
             .split(center_layout[2]);
-        
-            
-            
             
             let username_block = Paragraph::new(username.as_str())
             .block(Block::default().borders(Borders::ALL).title("Username"))
@@ -302,9 +269,6 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             );
             f.render_widget(username_block, login_chunks[0]);
         
-            
-            
-            
             let password_display: String = password.chars().map(|_| '*').collect();
             let password_block = Paragraph::new(password_display)
             .block(Block::default().borders(Borders::ALL).title("Password"))
@@ -316,10 +280,7 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 }),
             );
             f.render_widget(password_block, login_chunks[1]);
-        
-            
-            
-            
+
             let login_hint = "Press Enter to Login";
             let hint_paragraph = Paragraph::new(login_hint)
             .alignment(Alignment::Center)
@@ -331,10 +292,7 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 }),
             );
             f.render_widget(hint_paragraph, login_chunks[2]);
-        
-            
-            
-            
+
             if offline_mode_available {
             let bottom_layout = Layout::default()
                 .direction(Direction::Horizontal)
@@ -356,11 +314,6 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             f.render_widget(offline_label, bottom_layout[1]);
             }
         })?;
-        
-        
-        
-        
-
         
         if let Event::Key(key) = event::read()? {
             match input_mode {
