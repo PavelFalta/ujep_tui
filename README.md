@@ -1,4 +1,4 @@
-# UJEP timetable client
+# UJEP Timetable Client - Lightning Fast Access & Filter
 
 ![image](https://github.com/user-attachments/assets/c46b014d-7074-4d22-b937-5a8036267a7c)
 
