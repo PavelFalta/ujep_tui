@@ -166,7 +166,7 @@ async fn login(client: &reqwest::Client, headers: &HeaderMap) -> Result<serde_js
 fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Error>> {
     let stdout = io::stdout();
     enable_raw_mode()?;
-    // execute!(stdout, Clear(ClearType::All))?;
+    
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -174,10 +174,10 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
     let mut password = String::new();
     let mut input_mode = InputMode::Username;
 
-    // Label for the top
+    
     let label = "Input STAG credentials".to_string();
 
-    // Check if offline mode is possible
+    
     let offline_mode_available = get_cache_path("timetable.json")?.exists();
 
     loop {
@@ -199,44 +199,44 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             }
             let total_height = size.height;
         
-            //
-            // 1) We want:
-            //    - A 12-line region in the vertical center for the label + login form.
-            //    - A 3-line region pinned at the bottom for the "Offline Mode" button.
-            //    - Everything else is divided between top and bottom as vertical "spacers."
-            //
-            //    So total needed = 12 (center) + 3 (bottom) = 15 lines.
-            //    If the terminal is smaller than 15 lines, TUI will squash or truncate something.
-            //
+            
+            
+            
+            
+            
+            
+            
+            
+            
         
             let leftover_vertical = total_height.saturating_sub(15);
             let top_space = leftover_vertical / 2;
             let bottom_space = leftover_vertical - top_space;
         
-            // Vertical layout: [ top_space | 12-line center | bottom_space | 3-line pinned row ]
+            
             let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(top_space.into()),
-                Constraint::Length(12),       // center block
+                Constraint::Length(12),       
                 Constraint::Length(bottom_space.into()),
-                Constraint::Length(3),        // pinned bottom row
+                Constraint::Length(3),        
             ])
             .split(size);
         
             let center_rect = vertical_layout[1];
             let bottom_rect = vertical_layout[3];
         
-            //
-            // 2) Horizontally, we want a 40-column region in the exact middle for the login form.
-            //    leftover_width = total_width - 40. Then split that leftover equally into left_space/right_space.
-            //    If leftover is odd, one side will get 1 more column than the other (that’s normal in text UIs).
-            //
+            
+            
+            
+            
+            
             let leftover_width = center_rect.width.saturating_sub(40);
             let left_space = leftover_width / 2;
             let right_space = leftover_width - left_space;
         
-            // Horizontal layout: [ left_space | 40 columns for login | right_space ]
+            
             let horizontal_layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -248,31 +248,31 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
         
             let login_area = horizontal_layout[1];
         
-            //
-            // 3) Inside that 12×40 login area, we split vertically into:
-            //    - 2 lines for the label
-            //    - 1 line spacer
-            //    - 9 lines for the actual login frame
-            //
+            
+            
+            
+            
+            
+            
             let center_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(2),  // label
-                Constraint::Length(1),  // small spacer
-                Constraint::Length(9), // login frame
+                Constraint::Length(2),  
+                Constraint::Length(1),  
+                Constraint::Length(9), 
             ])
             .split(login_area);
         
-            //
-            // 4) Render the label in the top chunk (2 lines, centered text).
-            //
+            
+            
+            
             let label_paragraph = Paragraph::new(label.as_str()).alignment(Alignment::Center);
             f.render_widget(label_paragraph, center_layout[0]);
         
-            //
-            // 5) The login frame is 9 lines tall. We'll put a margin(1) inside it,
-            //    leaving 7 lines for the username/password/hint rows (3+3+1=7).
-            //
+            
+            
+            
+            
             let login_frame = Block::default()
             .borders(Borders::ALL)
             .title("Login");
@@ -281,16 +281,16 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             let login_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3), // username row
-                Constraint::Length(3), // password row
-                Constraint::Length(1), // hint row
+                Constraint::Length(3), 
+                Constraint::Length(3), 
+                Constraint::Length(1), 
             ])
             .margin(1)
             .split(center_layout[2]);
         
-            //
-            // 6) Username block
-            //
+            
+            
+            
             let username_block = Paragraph::new(username.as_str())
             .block(Block::default().borders(Borders::ALL).title("Username"))
             .style(
@@ -302,9 +302,9 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             );
             f.render_widget(username_block, login_chunks[0]);
         
-            //
-            // 7) Password block (mask the input with '*')
-            //
+            
+            
+            
             let password_display: String = password.chars().map(|_| '*').collect();
             let password_block = Paragraph::new(password_display)
             .block(Block::default().borders(Borders::ALL).title("Password"))
@@ -317,9 +317,9 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             );
             f.render_widget(password_block, login_chunks[1]);
         
-            //
-            // 8) Hint row (centered)
-            //
+            
+            
+            
             let login_hint = "Press Enter to Login";
             let hint_paragraph = Paragraph::new(login_hint)
             .alignment(Alignment::Center)
@@ -332,9 +332,9 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
             );
             f.render_widget(hint_paragraph, login_chunks[2]);
         
-            //
-            // 9) Finally, the bottom 3-line row for Offline Mode, pinned at bottom right.
-            //
+            
+            
+            
             if offline_mode_available {
             let bottom_layout = Layout::default()
                 .direction(Direction::Horizontal)
@@ -361,13 +361,13 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
         
         
 
-        // Handle keyboard input
+        
         if let Event::Key(key) = event::read()? {
             match input_mode {
                 InputMode::Username => match key.code {
                     KeyCode::Enter | KeyCode::Tab => {
-                        // Move to Password (or OfflineMode if you prefer).
-                        // But if there's no offline mode, we only go to Password.
+                        
+                        
                         if offline_mode_available {
                             input_mode = InputMode::Password;
                         } else {
@@ -382,7 +382,7 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 },
                 InputMode::Password => match key.code {
                     KeyCode::Enter => {
-                        // Done typing - try to login
+                        
                         disable_raw_mode()?;
                         return Ok((username, password));
                     }
@@ -401,7 +401,7 @@ fn prompt_for_credentials() -> Result<(String, String), Box<dyn std::error::Erro
                 },
                 InputMode::OfflineMode => match key.code {
                     KeyCode::Enter => {
-                        // If user selects offline mode, let's return an error or handle accordingly
+                        
                         disable_raw_mode()?;
                         return Err("offline mode".into());
                     }
