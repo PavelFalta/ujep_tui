@@ -49,4 +49,4 @@ Once installed, launch the application from your terminal. The interface allows 
 - Filter/search classes.
 - Toggle a very cool ASCII clock I implemented just because I can.
 
-Also runs offline providing you already logged in at least once before.
+Also runs offline provided you already logged in at least once before.
