@@ -1,6 +1,6 @@
 [package]
 name = "ujep_tui"
-version = "0.1.1"
+version = "v1.1"
 edition = "2021"
 
 [dependencies]
