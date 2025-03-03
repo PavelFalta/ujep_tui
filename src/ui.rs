@@ -223,7 +223,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             };
 
             
-            let (status_text, gauge_data) = build_status_msg(final_displayed, now);
+            let (status_text, gauge_data) = build_status_msg(&displayed, now);
             let status_paragraph = Paragraph::new(status_text)
                 .block(Block::default().borders(Borders::ALL).title("Status"))
                 .alignment(Alignment::Center)
