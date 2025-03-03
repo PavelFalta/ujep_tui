@@ -1,6 +1,6 @@
 [package]
-name = "timetable_visualizer"
-version = "0.1.0"
+name = "ujep_tui"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
