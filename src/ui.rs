@@ -608,6 +608,19 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                         KeyCode::Enter | KeyCode::Backspace | KeyCode::Char('h') => {
                             app.show_details = false;
                         }
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            if app.details_scroll_index > 0 {
+                                app.details_scroll_index -= 1;
+                            }
+                        }
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            if !app.unique_courses.is_empty() {
+                                app.details_scroll_index = cmp::min(
+                                    app.details_scroll_index + 1,
+                                    app.unique_courses.len().saturating_sub(1),
+                                );
+                            }
+                        }
                         KeyCode::Char('q') => break,
                         _ => {}
                     }
