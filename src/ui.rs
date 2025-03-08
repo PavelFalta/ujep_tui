@@ -1158,7 +1158,8 @@ fn draw_course_details<B: Backend>(
     ));
 
     let details_text = if let Ok(details) = fs::read_to_string(&path) {
-        details
+        let details_json: serde_json::Value = serde_json::from_str(&details).unwrap_or_default();
+        serde_json::to_string_pretty(&details_json).unwrap_or(details)
     } else {
         format!(
             "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
