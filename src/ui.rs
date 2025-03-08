@@ -1133,7 +1133,6 @@ fn center_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
         .split(middle);
     popup_layout[1]
 }
-
 fn draw_course_details<B: Backend>(
     f: &mut ratatui::Frame<B>,
     size: Rect,
@@ -1141,15 +1140,14 @@ fn draw_course_details<B: Backend>(
     selected: usize,
     next_index: Option<usize>,
     now: NaiveDateTime,
-    app: &App,
+    app: &mut App,
 ) {
-
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
     let mut path = cache_dir.join("ujep_tui");
-    fs::create_dir_all(&path).unwrap();
+    fs::create_dir_all(&path).ok();
 
     path.push("course_details");
-    fs::create_dir_all(&path).unwrap();
+    fs::create_dir_all(&path).ok();
 
     path.push(format!(
         "{}_{}_{}.json",
@@ -1157,6 +1155,7 @@ fn draw_course_details<B: Backend>(
         course.abbr.as_deref().unwrap_or("N/A"),
         course.year.as_deref().unwrap_or("N/A")
     ));
+
     let details_text = if let Ok(details) = fs::read_to_string(&path) {
         let details_json: serde_json::Value = serde_json::from_str(&details).unwrap_or_default();
         let mut formatted_details = String::new();
@@ -1192,11 +1191,37 @@ fn draw_course_details<B: Backend>(
         )
     };
 
+    f.render_widget(Clear, size);
+
+    // Split details_text into lines
+    let lines: Vec<&str> = details_text.lines().collect();
+    let total = lines.len();
+    if app.details_scroll_index > total.saturating_sub(1) {
+        app.details_scroll_index = total.saturating_sub(1);
+    }
+
+    // Determine how many lines fit
+    let lines_available = size.height.saturating_sub(4) as usize; 
+    let half_lines = lines_available / 2;
+    let scroll = if app.details_scroll_index >= half_lines && total > lines_available {
+        cmp::min(app.details_scroll_index - half_lines, total.saturating_sub(lines_available))
+    } else {
+        0
+    };
+    let end = cmp::min(scroll + lines_available, total);
+
+    // Build displayed lines with ">" indicator
+    let mut displayed_lines = Vec::new();
+    for (i, &line) in lines.iter().enumerate().skip(scroll).take(end - scroll) {
+        let prefix = if i == app.details_scroll_index { ">" } else { " " };
+        displayed_lines.push(format!("{} {}", prefix, line));
+    }
+
+    let final_text = displayed_lines.join("\n");
     let details_block = Block::default().borders(Borders::ALL).title("Details");
-    let details_paragraph = Paragraph::new(details_text)
+    let details_paragraph = Paragraph::new(final_text)
         .block(details_block)
         .alignment(Alignment::Left);
-    f.render_widget(Clear, size);
     f.render_widget(details_paragraph, size);
 
     let label_text = if is_course_ongoing(course, now) {
@@ -1206,7 +1231,6 @@ fn draw_course_details<B: Backend>(
     } else {
         ""
     };
-
     if !label_text.is_empty() {
         let label_area = Rect {
             x: size.x + size.width.saturating_sub(10),
