@@ -609,6 +609,20 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             app.show_details = false;
                         }
                         KeyCode::Char('q') => break,
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            if app.details_scroll_index > 0 {
+                                app.details_scroll_index -= 1;
+                            }
+                        }
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            app.details_scroll_index += 1;
+                        }
+                        KeyCode::Home => {
+                            app.details_scroll_index = 0;
+                        }
+                        KeyCode::End => {
+                            app.details_scroll_index = usize::MAX;
+                        }
                         _ => {}
                     }
                     continue;
