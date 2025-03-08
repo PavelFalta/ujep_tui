@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use chrono::Local;
 use dirs;
+use std::collections::HashSet;
 
 async fn fetch_timetable_data(client: &reqwest::Client, headers: &HeaderMap, stagid: &str, default_year: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let url = format!("https://ujepice.ujep.cz/api/internal/student-timetable?stagId={}&year={}", stagid, default_year);
@@ -75,5 +76,51 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
 
     save_timetable_to_file(&timetable_response)?;
 
+    let mut seen_courses = HashSet::new();
+
+    if let Some(course_actions) = timetable_response["data"]["courseActions"].as_array() {
+        for course in course_actions {
+            if let (Some(dept), Some(abbr), Some(year)) = (
+                course["dept"].as_str(),
+                course["abbr"].as_str(),
+                course["year"].as_str().and_then(|y| y.parse::<u32>().ok())
+            ) {
+                let course_key = format!("{}_{}", dept, abbr);
+                if seen_courses.insert(course_key) {
+                    fetch_details(&client, dept, abbr, &year, &headers).await?;
+                }
+            }
+        }
+    }
+
     Ok(())
+}
+
+pub async fn fetch_details(client: &reqwest::Client, department: &str, abbr: &str, year: &u32, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    // request to ujepice.ujep.cz/api/stag/courses/get-course-info?katedra=KI&zkratka=ZZD&rok=2021&outputFormat=JSON
+    let url = format!("https://ujepice.ujep.cz/api/stag/courses/get-course-info?katedra={}&zkratka={}&rok={}&outputFormat=JSON", department, abbr, year);
+    let mut headers = headers.clone();
+    headers.insert("Authorization", HeaderValue::from_static("ApiKey w2HSabPjnn5St73cMPUfqq7TMnDQut3ZExqmX4eQpuxiuNoRyTvZre74LovNiUja"));
+    let response = client.get(&url)
+        .headers(headers.clone())
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    // now need to save the response to the cache directory .cache/ujep_tui/course_details/department_abbr_year.json
+    let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
+    let mut path = cache_dir.join("ujep_tui");
+    std::fs::create_dir_all(&path)?;
+
+    path.push("course_details");
+    std::fs::create_dir_all(&path)?;
+
+    path.push(format!("{}_{}_{}.json", department, abbr, year));
+
+    let mut file = File::create(path)?;
+    file.write_all(serde_json::to_string_pretty(&response)?.as_bytes())?;
+
+    Ok(response)
+
 }

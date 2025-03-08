@@ -514,67 +514,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
             if app.show_details {
                 if let Some(selected) = app.selected {
                     if let Some(course) = final_displayed.get(selected) {
-                        let details_text = format!(
-                            "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
-                            course.id.map_or("N/A".to_string(), |v| v.to_string()),
-                            course.name.as_deref().unwrap_or("N/A"),
-                            course.dept.as_deref().unwrap_or("N/A"),
-                            course.abbr.as_deref().unwrap_or("N/A"),
-                            course.year.as_deref().unwrap_or("N/A"),
-                            course.semester.as_deref().unwrap_or("N/A"),
-                            course.date.as_deref().unwrap_or("N/A"),
-                            course.timeFrom.as_deref().unwrap_or("N/A"),
-                            course.timeTo.as_deref().unwrap_or("N/A"),
-                            course.place.as_deref().unwrap_or("N/A"),
-                            course.room.as_deref().unwrap_or("N/A"),
-                            course.class_type.as_deref().unwrap_or("N/A"),
-                            course.day.as_deref().unwrap_or("N/A"),
-                            course.weekType.as_deref().unwrap_or("N/A"),
-                            course.weekFrom.map_or("N/A".to_string(), |v| v.to_string()),
-                            course.weekTo.map_or("N/A".to_string(), |v| v.to_string()),
-                            course.note.as_deref().unwrap_or("N/A"),
-                            course.contact.as_deref().unwrap_or("N/A"),
-                            course.statut.as_deref().unwrap_or("N/A"),
-                            course.teachingTeacherStagId.map_or("N/A".to_string(), |v| v.to_string()),
-                        );
-                        let lines: u16 = details_text.lines().count() as u16;
-                        let width: u16 = details_text.lines().map(|line| line.len()).max().unwrap_or(0) as u16;
-
-                        let details_area = if size.height < lines * 3 + 4 {
-                            center_rect(width + 4, 65, size)
-                        } else {
-                            center_rect(width + 4, lines * 3, size)
-                        };
-                        let details_block = Block::default().borders(Borders::ALL).title("Details");
-                        let details_paragraph = Paragraph::new(details_text)
-                            .block(details_block)
-                            .alignment(Alignment::Center);
-                        f.render_widget(Clear, details_area);
-                        let bg_block = Block::default().style(Style::default().bg(Color::Black));
-                        f.render_widget(bg_block, details_area);
-                        f.render_widget(details_paragraph, details_area);
-
-                        let label_text = if is_course_ongoing(course, now) {
-                            "ONGOING"
-                        } else if Some(selected) == next_index {
-                            "NEXT"
-                        } else {
-                            ""
-                        };
-
-                        if !label_text.is_empty() {
-                            let label_area = Rect {
-                                x: details_area.x + details_area.width.saturating_sub(10),
-                                y: details_area.y,
-                                width: 10,
-                                height: 3,
-                            };
-                            let label_block = Block::default().borders(Borders::ALL).title("Status");
-                            let label_paragraph = Paragraph::new(label_text)
-                                .block(label_block)
-                                .alignment(Alignment::Center);
-                            f.render_widget(label_paragraph, label_area);
-                        }
+                        draw_course_details(f, size, course, selected, next_index, now);
                     }
                 }
             }
@@ -1189,4 +1129,76 @@ fn center_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
         )
         .split(middle);
     popup_layout[1]
+}
+
+
+fn draw_course_details<B: Backend>(
+    f: &mut ratatui::Frame<B>,
+    size: Rect,
+    course: &CourseAction,
+    selected: usize,
+    next_index: Option<usize>,
+    now: NaiveDateTime,
+) {
+    let details_text = format!(
+        "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
+        course.id.map_or("N/A".to_string(), |v| v.to_string()),
+        course.name.as_deref().unwrap_or("N/A"),
+        course.dept.as_deref().unwrap_or("N/A"),
+        course.abbr.as_deref().unwrap_or("N/A"),
+        course.year.as_deref().unwrap_or("N/A"),
+        course.semester.as_deref().unwrap_or("N/A"),
+        course.date.as_deref().unwrap_or("N/A"),
+        course.timeFrom.as_deref().unwrap_or("N/A"),
+        course.timeTo.as_deref().unwrap_or("N/A"),
+        course.place.as_deref().unwrap_or("N/A"),
+        course.room.as_deref().unwrap_or("N/A"),
+        course.class_type.as_deref().unwrap_or("N/A"),
+        course.day.as_deref().unwrap_or("N/A"),
+        course.weekType.as_deref().unwrap_or("N/A"),
+        course.weekFrom.map_or("N/A".to_string(), |v| v.to_string()),
+        course.weekTo.map_or("N/A".to_string(), |v| v.to_string()),
+        course.note.as_deref().unwrap_or("N/A"),
+        course.contact.as_deref().unwrap_or("N/A"),
+        course.statut.as_deref().unwrap_or("N/A"),
+        course.teachingTeacherStagId.map_or("N/A".to_string(), |v| v.to_string()),
+    );
+    let lines: u16 = details_text.lines().count() as u16;
+    let width: u16 = details_text.lines().map(|line| line.len()).max().unwrap_or(0) as u16;
+
+    let details_area = if size.height < lines * 3 + 4 {
+        center_rect(width + 4, 65, size)
+    } else {
+        center_rect(width + 4, lines * 3, size)
+    };
+    let details_block = Block::default().borders(Borders::ALL).title("Details");
+    let details_paragraph = Paragraph::new(details_text)
+        .block(details_block)
+        .alignment(Alignment::Center);
+    f.render_widget(Clear, details_area);
+    let bg_block = Block::default().style(Style::default().bg(Color::Black));
+    f.render_widget(bg_block, details_area);
+    f.render_widget(details_paragraph, details_area);
+
+    let label_text = if is_course_ongoing(course, now) {
+        "ONGOING"
+    } else if Some(selected) == next_index {
+        "NEXT"
+    } else {
+        ""
+    };
+
+    if !label_text.is_empty() {
+        let label_area = Rect {
+            x: details_area.x + details_area.width.saturating_sub(10),
+            y: details_area.y,
+            width: 10,
+            height: 3,
+        };
+        let label_block = Block::default().borders(Borders::ALL).title("Status");
+        let label_paragraph = Paragraph::new(label_text)
+            .block(label_block)
+            .alignment(Alignment::Center);
+        f.render_widget(label_paragraph, label_area);
+    }
 }
