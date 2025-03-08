@@ -19,6 +19,8 @@ pub struct App<'a> {
     pub ignore_overlay_active: bool,
     
     pub ignore_overlay_index: usize,
+
+    pub details_scroll_index: usize,
     
     pub unique_courses: Vec<&'a CourseAction>,
     
@@ -59,6 +61,7 @@ impl<'a> App<'a> {
             ignored_ids: ignored_ids.unwrap_or_default(),
             ignore_overlay_active: false,
             ignore_overlay_index: 0,
+            details_scroll_index: 0,
             unique_courses,
             search_mode: false,
             search_query: None,
