@@ -12,6 +12,9 @@ use ratatui::{
 
 use crate::app::App;
 use crate::timetable::{is_course_ongoing, parse_course_datetime, CourseAction};
+use std::fs;
+use std::path::PathBuf;
+use dirs;
 
 
 struct LoweredFields {
@@ -1139,29 +1142,48 @@ fn draw_course_details<B: Backend>(
     next_index: Option<usize>,
     now: NaiveDateTime,
 ) {
-    let details_text = format!(
-        "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
-        course.id.map_or("N/A".to_string(), |v| v.to_string()),
-        course.name.as_deref().unwrap_or("N/A"),
+
+    let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
+    let mut path = cache_dir.join("ujep_tui");
+    fs::create_dir_all(&path).unwrap();
+
+    path.push("course_details");
+    fs::create_dir_all(&path).unwrap();
+
+    path.push(format!(
+        "{}_{}_{}.json",
         course.dept.as_deref().unwrap_or("N/A"),
         course.abbr.as_deref().unwrap_or("N/A"),
-        course.year.as_deref().unwrap_or("N/A"),
-        course.semester.as_deref().unwrap_or("N/A"),
-        course.date.as_deref().unwrap_or("N/A"),
-        course.timeFrom.as_deref().unwrap_or("N/A"),
-        course.timeTo.as_deref().unwrap_or("N/A"),
-        course.place.as_deref().unwrap_or("N/A"),
-        course.room.as_deref().unwrap_or("N/A"),
-        course.class_type.as_deref().unwrap_or("N/A"),
-        course.day.as_deref().unwrap_or("N/A"),
-        course.weekType.as_deref().unwrap_or("N/A"),
-        course.weekFrom.map_or("N/A".to_string(), |v| v.to_string()),
-        course.weekTo.map_or("N/A".to_string(), |v| v.to_string()),
-        course.note.as_deref().unwrap_or("N/A"),
-        course.contact.as_deref().unwrap_or("N/A"),
-        course.statut.as_deref().unwrap_or("N/A"),
-        course.teachingTeacherStagId.map_or("N/A".to_string(), |v| v.to_string()),
-    );
+        course.year.as_deref().unwrap_or("N/A")
+    ));
+
+    let details_text = if let Ok(details) = fs::read_to_string(&path) {
+        details
+    } else {
+        format!(
+            "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
+            course.id.map_or("N/A".to_string(), |v| v.to_string()),
+            course.name.as_deref().unwrap_or("N/A"),
+            course.dept.as_deref().unwrap_or("N/A"),
+            course.abbr.as_deref().unwrap_or("N/A"),
+            course.year.as_deref().unwrap_or("N/A"),
+            course.semester.as_deref().unwrap_or("N/A"),
+            course.date.as_deref().unwrap_or("N/A"),
+            course.timeFrom.as_deref().unwrap_or("N/A"),
+            course.timeTo.as_deref().unwrap_or("N/A"),
+            course.place.as_deref().unwrap_or("N/A"),
+            course.room.as_deref().unwrap_or("N/A"),
+            course.class_type.as_deref().unwrap_or("N/A"),
+            course.day.as_deref().unwrap_or("N/A"),
+            course.weekType.as_deref().unwrap_or("N/A"),
+            course.weekFrom.map_or("N/A".to_string(), |v| v.to_string()),
+            course.weekTo.map_or("N/A".to_string(), |v| v.to_string()),
+            course.note.as_deref().unwrap_or("N/A"),
+            course.contact.as_deref().unwrap_or("N/A"),
+            course.statut.as_deref().unwrap_or("N/A"),
+            course.teachingTeacherStagId.map_or("N/A".to_string(), |v| v.to_string()),
+        )
+    };
 
     let details_block = Block::default().borders(Borders::ALL).title("Details");
     let details_paragraph = Paragraph::new(details_text)
