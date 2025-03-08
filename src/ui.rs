@@ -1142,7 +1142,6 @@ fn draw_course_details<B: Backend>(
     next_index: Option<usize>,
     now: NaiveDateTime,
 ) {
-
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
     let mut path = cache_dir.join("ujep_tui");
     fs::create_dir_all(&path).unwrap();
@@ -1187,11 +1186,27 @@ fn draw_course_details<B: Backend>(
     };
 
     let details_block = Block::default().borders(Borders::ALL).title("Details");
-    let details_paragraph = Paragraph::new(details_text)
+
+
+    let lines_available = size.height.saturating_sub(2) as usize;
+    let half_lines = lines_available / 2;
+
+    let total_lines = details_text.lines().count();
+    let scroll = if selected >= half_lines && total_lines > lines_available {
+        cmp::min(selected - half_lines, total_lines - lines_available)
+    } else {
+        0
+    };
+
+    let visible_lines: Vec<&str> = details_text.lines().skip(scroll).take(lines_available).collect();
+    let visible_text = visible_lines.join("\n");
+
+    let visible_paragraph = Paragraph::new(visible_text)
         .block(details_block)
         .alignment(Alignment::Left);
+
     f.render_widget(Clear, size);
-    f.render_widget(details_paragraph, size);
+    f.render_widget(visible_paragraph, size);
 
     let label_text = if is_course_ongoing(course, now) {
         "ONGOING"
