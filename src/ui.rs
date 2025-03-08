@@ -609,20 +609,6 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Res
                             app.show_details = false;
                         }
                         KeyCode::Char('q') => break,
-                        KeyCode::Up | KeyCode::Char('k') => {
-                            if app.details_scroll_index > 0 {
-                                app.details_scroll_index -= 1;
-                            }
-                        }
-                        KeyCode::Down | KeyCode::Char('j') => {
-                            app.details_scroll_index += 1;
-                        }
-                        KeyCode::Home => {
-                            app.details_scroll_index = 0;
-                        }
-                        KeyCode::End => {
-                            app.details_scroll_index = usize::MAX;
-                        }
                         _ => {}
                     }
                     continue;
@@ -1147,6 +1133,7 @@ fn center_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
         .split(middle);
     popup_layout[1]
 }
+
 fn draw_course_details<B: Backend>(
     f: &mut ratatui::Frame<B>,
     size: Rect,
@@ -1156,6 +1143,7 @@ fn draw_course_details<B: Backend>(
     now: NaiveDateTime,
     app: &App,
 ) {
+
     let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
     let mut path = cache_dir.join("ujep_tui");
     fs::create_dir_all(&path).unwrap();
@@ -1200,25 +1188,7 @@ fn draw_course_details<B: Backend>(
     };
 
     let details_block = Block::default().borders(Borders::ALL).title("Details");
-
-    let lines: Vec<&str> = details_text.lines().collect();
-    let lines_available = size.height.saturating_sub(2) as usize;
-    let half_lines = lines_available / 2;
-
-    let scroll = if app.details_scroll_index >= half_lines && lines.len() > lines_available {
-        cmp::min(
-            app.details_scroll_index - half_lines,
-            lines.len() - lines_available,
-        )
-    } else {
-        0
-    };
-
-    let end = cmp::min(scroll + lines_available, lines.len());
-    let visible_lines: Vec<&str> = lines.iter().skip(scroll).take(end - scroll).cloned().collect();
-    let visible_text = visible_lines.join("\n");
-
-    let details_paragraph = Paragraph::new(visible_text)
+    let details_paragraph = Paragraph::new(details_text)
         .block(details_block)
         .alignment(Alignment::Left);
     f.render_widget(Clear, size);
