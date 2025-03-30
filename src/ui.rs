@@ -1165,11 +1165,9 @@ fn draw_course_details<B: Backend>(
     ));
 
     let allowed_keys = vec![
-        "Name",
-        "Department",
-        "Abbreviation",
-        "Year",
-        "Semester",
+        "cvicici",
+        "garanti",
+        ""
     ];
 
     let details_text = if let Ok(details) = fs::read_to_string(&path) {
