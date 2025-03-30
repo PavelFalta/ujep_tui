@@ -1164,12 +1164,20 @@ fn draw_course_details<B: Backend>(
         course.year.as_deref().unwrap_or("N/A")
     ));
 
+    let allowed_keys = vec![
+        "Name",
+        "Department",
+        "Abbreviation",
+        "Year",
+        "Semester",
+    ];
+
     let details_text = if let Ok(details) = fs::read_to_string(&path) {
         let details_json: serde_json::Value = serde_json::from_str(&details).unwrap_or_default();
         let mut formatted_details = String::new();
         if let Some(obj) = details_json.as_object() {
             for (key, value) in obj {
-                if value != "" && value.to_string() != "null" {
+                if allowed_keys.contains(&key.as_str()) {
                     formatted_details.push_str(&format!("{}: {}\n", key, value));
                 }
             }
