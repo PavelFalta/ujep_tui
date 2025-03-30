@@ -76,40 +76,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Show loading widget
-    display_loading_widget(&mut terminal)?;
+    display_loading_widget()?;
     
     // Try to login and fetch timetable, fallback to offline mode if network errors occur
-    let online_mode;
-    
-    // Setup login
-    let login_result = run_login().await;
-    
-    // Refresh the loading display after login result
-    display_loading_widget(&mut terminal)?;
-    
-    // Handle login result
-    match login_result {
+    let online_mode = match run_login().await {
         Ok(_) => {
-            // Now fetch the timetable
-            let fetch_result = fetch_timetable().await;
-            
-            // Refresh the loading display after fetch
-            display_loading_widget(&mut terminal)?;
-            
-            // Handle fetch result
-            match fetch_result {
-                Ok(_) => online_mode = true,
+            match fetch_timetable().await {
+                Ok(_) => true,
                 Err(e) => {
                     // Check if error is a network error
                     if e.to_string().contains("failed to lookup address") || 
                        e.to_string().contains("dns error") {
                         offline_fallback()?;
-                        online_mode = false;
+                        false
                     } else {
-                        disable_raw_mode()?;
-                        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-                        terminal.show_cursor()?;
                         return Err(e);
                     }
                 }
@@ -119,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Check if error is a network error
             if e.to_string().contains("offline mode") {
                 offline_fallback()?;
-                online_mode = false;
+                false
             } 
             else if e.to_string().contains("failed to lookup address") || 
             e.to_string().contains("dns error") 
@@ -138,10 +118,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // Clean up terminal after loading process is complete
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    // disable_raw_mode()?;
+    // execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    // terminal.show_cursor()?;
 
     let mut last: Option<bool> = None;
 
@@ -217,20 +196,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if let Err(err) = res {
             if err.kind() == io::ErrorKind::Interrupted && err.to_string() == "forced refresh" {
-                // Setup terminal for loading screen
-                enable_raw_mode()?;
-                execute!(terminal.backend_mut(), EnterAlternateScreen)?;
-                
-                // Initial loading display
-                display_loading_widget(&mut terminal)?;
-                
-                // Setup fetch task
-                let fetch_result = fetch_timetable().await;
-                
-                // Refresh loading display after fetch
-                display_loading_widget(&mut terminal)?;
-                
-                match fetch_result {
+                display_loading_widget()?;
+                match fetch_timetable().await {
                     Ok(_) => last = Some(false),
                     Err(e) => {
                         if e.to_string().contains("failed to lookup address") || 
@@ -256,7 +223,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn display_loading_widget(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<(), Box<dyn std::error::Error>> {
+fn display_loading_widget() -> Result<(), Box<dyn std::error::Error>> {
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
     let loading_widget = ratatui::widgets::Paragraph::new("Loading...")
         .alignment(ratatui::layout::Alignment::Center);
     let size = terminal.size()?;
