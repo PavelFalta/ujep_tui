@@ -1183,6 +1183,7 @@ fn draw_course_details<B: Backend>(
         "podminujiciPredmety",
         "pozadavky",
         "prednasejici",
+        "prehledLatky",
         "typZkousky",
         "zkratka",
         "vyukaLS",
