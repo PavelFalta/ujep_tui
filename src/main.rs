@@ -118,9 +118,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    // disable_raw_mode()?;
+    // execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    // terminal.show_cursor()?;
 
     let mut last: Option<bool> = None;
 
