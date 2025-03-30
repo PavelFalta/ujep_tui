@@ -76,19 +76,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    // Show loading widget
     display_loading_widget(&mut terminal)?;
     
     // Try to login and fetch timetable, fallback to offline mode if network errors occur
-    let online_mode = match run_login().await {
+    let online_mode;
+    
+    // Setup login
+    let login_result = run_login().await;
+    
+    // Refresh the loading display after login result
+    display_loading_widget(&mut terminal)?;
+    
+    // Handle login result
+    match login_result {
         Ok(_) => {
-            match fetch_timetable().await {
-                Ok(_) => true,
+            // Now fetch the timetable
+            let fetch_result = fetch_timetable().await;
+            
+            // Refresh the loading display after fetch
+            display_loading_widget(&mut terminal)?;
+            
+            // Handle fetch result
+            match fetch_result {
+                Ok(_) => online_mode = true,
                 Err(e) => {
                     // Check if error is a network error
                     if e.to_string().contains("failed to lookup address") || 
                        e.to_string().contains("dns error") {
                         offline_fallback()?;
-                        false
+                        online_mode = false;
                     } else {
                         disable_raw_mode()?;
                         execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -102,7 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Check if error is a network error
             if e.to_string().contains("offline mode") {
                 offline_fallback()?;
-                false
+                online_mode = false;
             } 
             else if e.to_string().contains("failed to lookup address") || 
             e.to_string().contains("dns error") 
@@ -204,8 +221,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 enable_raw_mode()?;
                 execute!(terminal.backend_mut(), EnterAlternateScreen)?;
                 
+                // Initial loading display
                 display_loading_widget(&mut terminal)?;
-                match fetch_timetable().await {
+                
+                // Setup fetch task
+                let fetch_result = fetch_timetable().await;
+                
+                // Refresh loading display after fetch
+                display_loading_widget(&mut terminal)?;
+                
+                match fetch_result {
                     Ok(_) => last = Some(false),
                     Err(e) => {
                         if e.to_string().contains("failed to lookup address") || 
