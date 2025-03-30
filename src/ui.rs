@@ -1199,46 +1199,14 @@ fn draw_course_details<B: Backend>(
                     // the value can have \r \n \t, so we need to format it obey the original format
                     let value = value.as_str().unwrap_or("N/A");
                     let value = value.replace("\r", "").replace("\t", "");
-                    
-                    // Use uppercase for keys to make them stand out
-                    let formatted_key = format!("{}:", key.to_uppercase());
-                    
-                    // Add key and value to details
-                    formatted_details.push_str(&formatted_key);
-                    formatted_details.push('\n');
-                    formatted_details.push_str(&value);
-                    formatted_details.push_str("\n\n"); // Add extra lines for readability
+                    formatted_details.push_str(&format!("{}: {}\n", key, value));
                 }
             }
-        }
-        // Remove trailing newlines
-        if formatted_details.ends_with("\n\n") {
-            formatted_details.truncate(formatted_details.len() - 2);
-        } else if formatted_details.ends_with('\n') {
-            formatted_details.truncate(formatted_details.len() - 1);
         }
         formatted_details
     } else {
         format!(
-            "ID: {}\n\n\
-            NAME: {}\n\n\
-            DEPARTMENT: {}\n\n\
-            ABBREVIATION: {}\n\n\
-            YEAR: {}\n\n\
-            SEMESTER: {}\n\n\
-            DATE: {}\n\n\
-            TIME: {} - {}\n\n\
-            PLACE: {}\n\n\
-            ROOM: {}\n\n\
-            TYPE: {}\n\n\
-            DAY: {}\n\n\
-            WEEK TYPE: {}\n\n\
-            WEEK FROM: {}\n\n\
-            WEEK TO: {}\n\n\
-            NOTE: {}\n\n\
-            CONTACT: {}\n\n\
-            STATUS: {}\n\n\
-            TEACHING TEACHER STAG ID: {}",
+            "ID: {}\nName: {}\nDepartment: {}\nAbbreviation: {}\nYear: {}\nSemester: {}\nDate: {}\nTime: {} - {}\nPlace: {}\nRoom: {}\nType: {}\nDay: {}\nWeek Type: {}\nWeek From: {}\nWeek To: {}\nNote: {}\nContact: {}\nStatus: {}\nTeaching Teacher Stag ID: {}",
             course.id.map_or("N/A".to_string(), |v| v.to_string()),
             course.name.as_deref().unwrap_or("N/A"),
             course.dept.as_deref().unwrap_or("N/A"),
@@ -1284,21 +1252,15 @@ fn draw_course_details<B: Backend>(
     // Build displayed lines with ">" indicator
     let mut displayed_lines = Vec::new();
     for (i, &line) in lines.iter().enumerate().skip(scroll).take(end - scroll) {
-        // Use special indicator only for lines with content (not empty lines)
-        let prefix = if i == app.details_scroll_index { 
-            if !line.trim().is_empty() { "► " } else { "  " }
-        } else { 
-            "  " 
-        };
-        displayed_lines.push(format!("{}{}", prefix, line));
+        let prefix = if i == app.details_scroll_index { ">" } else { " " };
+        displayed_lines.push(format!("{} {}", prefix, line));
     }
 
     let final_text = displayed_lines.join("\n");
     let details_block = Block::default().borders(Borders::ALL).title("Details");
     let details_paragraph = Paragraph::new(final_text)
         .block(details_block)
-        .alignment(Alignment::Left)
-        .wrap(Wrap { trim: true });
+        .alignment(Alignment::Left);
     f.render_widget(details_paragraph, size);
 
     let label_text = if is_course_ongoing(course, now) {
