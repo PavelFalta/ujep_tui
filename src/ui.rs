@@ -1194,7 +1194,17 @@ fn draw_course_details<B: Backend>(
         let details_json: serde_json::Value = serde_json::from_str(&details).unwrap_or_default();
         let mut formatted_details = String::new();
         if let Some(obj) = details_json.as_object() {
-            for (key, value) in obj {
+            // sort by longest value last
+            let mut sorted_obj = obj.iter().collect::<Vec<_>>();
+            sorted_obj.sort_by_key(|(_, value)| {
+                if let Some(s) = value.as_str() {
+                    s.len()
+                } else {
+                    0
+                }
+            });
+            sorted_obj.reverse();
+            for (key, value) in sorted_obj {
                 if allowed_keys.contains(&key.as_str()) {
                     // the value can have \r \n \t, so we need to format it obey the original format
                     let value = value.as_str().unwrap_or("N/A");
