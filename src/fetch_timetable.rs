@@ -114,16 +114,10 @@ fn should_fetch_course_details(dept: &str, abbr: &str, year: &u32) -> Result<boo
     let modified = metadata.modified()?;
     let modified_time: DateTime<Local> = DateTime::from(modified);
     let current_time = Local::now();
-    println!("modified_time: {}", modified_time);
-    println!("current_time: {}", current_time);
     
     // If file is older than a week, we should fetch
     let one_week = Duration::days(7);
     let should_fetch = current_time - modified_time > one_week;
-    println!("should_fetch: {}", should_fetch);
-    println!("one_week: {}", one_week);
-    println!("current_time - modified_time: {}", current_time - modified_time);
-
     
     Ok(should_fetch)
 }
