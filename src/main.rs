@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    display_loading_widget()?;
+    display_loading_widget(&mut terminal)?;
     
     // Try to login and fetch timetable, fallback to offline mode if network errors occur
     let online_mode = match run_login().await {
@@ -90,6 +90,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         offline_fallback()?;
                         false
                     } else {
+                        disable_raw_mode()?;
+                        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+                        terminal.show_cursor()?;
                         return Err(e);
                     }
                 }
@@ -118,9 +121,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // disable_raw_mode()?;
-    // execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    // terminal.show_cursor()?;
+    // Clean up terminal after loading process is complete
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    terminal.show_cursor()?;
 
     let mut last: Option<bool> = None;
 
@@ -196,7 +200,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if let Err(err) = res {
             if err.kind() == io::ErrorKind::Interrupted && err.to_string() == "forced refresh" {
-                display_loading_widget()?;
+                // Setup terminal for loading screen
+                enable_raw_mode()?;
+                execute!(terminal.backend_mut(), EnterAlternateScreen)?;
+                
+                display_loading_widget(&mut terminal)?;
                 match fetch_timetable().await {
                     Ok(_) => last = Some(false),
                     Err(e) => {
@@ -223,13 +231,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn display_loading_widget() -> Result<(), Box<dyn std::error::Error>> {
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-
+fn display_loading_widget(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<(), Box<dyn std::error::Error>> {
     let loading_widget = ratatui::widgets::Paragraph::new("Loading...")
         .alignment(ratatui::layout::Alignment::Center);
     let size = terminal.size()?;
