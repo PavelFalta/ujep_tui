@@ -1183,7 +1183,10 @@ fn draw_course_details<B: Backend>(
         "podminujiciPredmety",
         "pozadavky",
         "prednasejici",
+        "typZkousky",
         "zkratka",
+        "vyukaLS",
+        "vyukaZS"
     ];
 
     let details_text = if let Ok(details) = fs::read_to_string(&path) {
