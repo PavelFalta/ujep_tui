@@ -2,7 +2,7 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT, ACCEPT, 
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use chrono::Local;
+use chrono::{Local, DateTime, Duration};
 use dirs;
 use std::collections::HashSet;
 
@@ -87,13 +87,45 @@ pub async fn fetch_timetable() -> Result<(), Box<dyn std::error::Error>> {
             ) {
                 let course_key = format!("{}_{}", dept, abbr);
                 if seen_courses.insert(course_key) {
-                    fetch_details(&client, dept, abbr, &year, &headers).await?;
+                    let should_fetch = should_fetch_course_details(dept, abbr, &year)?;
+                    if should_fetch {
+                        fetch_details(&client, dept, abbr, &year, &headers).await?;
+                    }
                 }
             }
         }
     }
 
     Ok(())
+}
+
+fn should_fetch_course_details(dept: &str, abbr: &str, year: &u32) -> Result<bool, Box<dyn std::error::Error>> {
+    let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from("."));
+    let path = cache_dir.join("ujep_tui").join("course_details");
+    let file_path = path.join(format!("{}_{}_{}.json", dept, abbr, year));
+    
+    // If file doesn't exist, we should fetch
+    if !file_path.exists() {
+        return Ok(true);
+    }
+    
+    // Check file's last modified time
+    let metadata = std::fs::metadata(&file_path)?;
+    let modified = metadata.modified()?;
+    let modified_time: DateTime<Local> = DateTime::from(modified);
+    let current_time = Local::now();
+    println!("modified_time: {}", modified_time);
+    println!("current_time: {}", current_time);
+    
+    // If file is older than a week, we should fetch
+    let one_week = Duration::days(7);
+    let should_fetch = current_time - modified_time > one_week;
+    println!("should_fetch: {}", should_fetch);
+    println!("one_week: {}", one_week);
+    println!("current_time - modified_time: {}", current_time - modified_time);
+
+    
+    Ok(should_fetch)
 }
 
 pub async fn fetch_details(client: &reqwest::Client, department: &str, abbr: &str, year: &u32, headers: &HeaderMap) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
@@ -122,5 +154,4 @@ pub async fn fetch_details(client: &reqwest::Client, department: &str, abbr: &st
     file.write_all(serde_json::to_string_pretty(&response)?.as_bytes())?;
 
     Ok(response)
-
 }
