@@ -1198,8 +1198,7 @@ fn draw_course_details<B: Backend>(
                 if allowed_keys.contains(&key.as_str()) {
                     // the value can have \r \n \t, so we need to format it obey the original format
                     let value = value.as_str().unwrap_or("N/A");
-                    let formatted_value = value.replace("\r", "").replace("\n", "").replace("\t", "");
-                    formatted_details.push_str(&format!("{}: {}\n", key, formatted_value));
+                    formatted_details.push_str(&format!("{}: {}\n", key, value));
                 }
             }
         }
