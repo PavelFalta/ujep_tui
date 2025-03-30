@@ -1169,7 +1169,9 @@ fn draw_course_details<B: Backend>(
         let mut formatted_details = String::new();
         if let Some(obj) = details_json.as_object() {
             for (key, value) in obj {
-                formatted_details.push_str(&format!("{}: {}\n", key, value));
+                if value != "" {
+                    formatted_details.push_str(&format!("{}: {}\n", key, value));
+                }
             }
         }
         formatted_details
