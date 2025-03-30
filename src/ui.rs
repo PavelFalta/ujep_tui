@@ -1165,8 +1165,8 @@ fn draw_course_details<B: Backend>(
     ));
 
     let allowed_keys = vec![
-        "cvicici",
         "anotace",
+        "cvicici",
         "formaZkousky",
         "garanti",
         "jednotekCviceni",
