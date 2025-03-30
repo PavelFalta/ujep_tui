@@ -1196,7 +1196,10 @@ fn draw_course_details<B: Backend>(
         if let Some(obj) = details_json.as_object() {
             for (key, value) in obj {
                 if allowed_keys.contains(&key.as_str()) {
-                    formatted_details.push_str(&format!("{}: {}\n", key, value));
+                    // the value can have \r \n \t, so we need to format it obey the original format
+                    let value = value.as_str().unwrap_or("N/A");
+                    let formatted_value = value.replace("\r", "").replace("\n", "").replace("\t", "");
+                    formatted_details.push_str(&format!("{}: {}\n", key, formatted_value));
                 }
             }
         }
