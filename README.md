@@ -10,7 +10,7 @@
 You have two options to install the client:
 
 ### Option 1: Use Released Binaries
-- **Version:** v1.1
+- **Version:** v1.2
 - **Installation Guide:** Detailed instructions are available in the release description on my [GitHub Releases page](https://github.com/PavelFalta/ujep_tui/releases).
 
 Simply download the pre-built binary for your operating system and follow the guide provided in the release description.
